@@ -1,8 +1,9 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { Users, Linkedin, Twitter } from "lucide-react"
+import { Users, Linkedin, Twitter, X } from "lucide-react"
+import ClickableKeyword from "./clickable-keyword"
 
 interface TeamMember {
   name: string
@@ -19,7 +20,7 @@ interface TeamMember {
 
 export default function TeamAgent() {
   const [teamData, setTeamData] = useState<TeamMember[]>([])
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
 
   useEffect(() => {
     fetch("/data/team.json")
@@ -69,9 +70,9 @@ export default function TeamAgent() {
         <span className="text-[#225BBA]">#</span> 团队
       </h2>
 
-      {/* Grid Cards */}
+      {/* Compact Grid Cards */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"
+        className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
@@ -81,119 +82,133 @@ export default function TeamAgent() {
           <motion.div
             key={index}
             variants={cardVariants}
-            className="relative group"
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
+            className="relative group cursor-pointer"
+            onClick={() => setSelectedMember(member)}
           >
-            {/* Card Container */}
-            <div className="border-2 border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-900 transition-all hover:border-[#225BBA] hover:shadow-lg relative overflow-hidden">
-              {/* Animated Outline on Hover */}
-              {hoveredIndex === index && (
-                <motion.div
-                  className="absolute inset-0 border-2 border-[#225BBA] rounded-lg"
-                  animate={{
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-              )}
-
-              {/* Avatar */}
+            {/* Compact Card */}
+            <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3 bg-white dark:bg-slate-900 transition-all hover:border-[#225BBA] hover:shadow-md">
+              {/* Small Avatar */}
               <div
-                className="w-20 h-20 rounded-full mb-4 flex items-center justify-center text-white font-bold text-2xl"
+                className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold text-lg"
                 style={{ background: getGradient(index) }}
               >
                 {member.name.charAt(0)}
               </div>
 
-              {/* Basic Info */}
-              <h3 className="font-bold text-lg text-foreground mb-1">{member.name}</h3>
-              <p className="text-sm text-muted-foreground mb-1">{member.title}</p>
-              <p className="text-xs text-[#225BBA] font-mono mb-3">{member.focus}</p>
-
-              {/* Links */}
-              {(member.links.linkedin || member.links.x) && (
-                <div className="flex gap-2 mb-3">
-                  {member.links.linkedin && (
-                    <a
-                      href={member.links.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-[#225BBA] transition-colors"
-                    >
-                      <Linkedin size={16} />
-                    </a>
-                  )}
-                  {member.links.x && (
-                    <a
-                      href={member.links.x}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-[#225BBA] transition-colors"
-                    >
-                      <Twitter size={16} />
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Hover Details */}
-              {hoveredIndex === index && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="border-t border-slate-200 dark:border-slate-700 pt-3 mt-3"
-                >
-                  {/* Command Style Description */}
-                  <div className="font-mono text-xs mb-2">
-                    <span className="text-[#225BBA]">&gt;</span>{" "}
-                    <span className="text-slate-500">profile.load(&quot;{member.name}&quot;)</span>
-                  </div>
-
-                  <div className="font-mono text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <span className="text-[#225BBA]">→</span> 投资方向: {member.focus}
-                    </motion.div>
-                    {member.projects.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        <span className="text-[#225BBA]">→</span> 过往项目: {member.projects.join("、")}
-                      </motion.div>
-                    )}
-                    {member.bio && (
-                      <motion.div
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-slate-500 dark:text-slate-500 italic text-[10px] mt-2"
-                      >
-                        {member.bio}
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
+              {/* Name */}
+              <h3 className="font-semibold text-sm text-center text-foreground mb-1 truncate">
+                <ClickableKeyword keyword={member.name} module="team">
+                  {member.name}
+                </ClickableKeyword>
+              </h3>
+              
+              {/* Title */}
+              <p className="text-xs text-center text-muted-foreground truncate">{member.title}</p>
             </div>
           </motion.div>
         ))}
       </motion.div>
 
+      {/* Modal for Member Details */}
+      <AnimatePresence>
+        {selectedMember && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedMember(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-xl border-2 border-[#225BBA] p-6 max-w-md w-full relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Avatar */}
+              <div
+                className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-bold text-3xl"
+                style={{ background: getGradient(teamData.indexOf(selectedMember)) }}
+              >
+                {selectedMember.name.charAt(0)}
+              </div>
+
+              {/* Name & Title */}
+              <h3 className="text-2xl font-bold text-center text-foreground mb-2">
+                {selectedMember.name}
+              </h3>
+              <p className="text-center text-muted-foreground mb-1">{selectedMember.title}</p>
+              <p className="text-center text-sm text-[#225BBA] font-mono mb-4">
+                {selectedMember.focus}
+              </p>
+
+              {/* Links */}
+              {(selectedMember.links.linkedin || selectedMember.links.x) && (
+                <div className="flex gap-3 justify-center mb-4">
+                  {selectedMember.links.linkedin && (
+                    <a
+                      href={selectedMember.links.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-[#225BBA] transition-colors"
+                    >
+                      <Linkedin size={20} />
+                    </a>
+                  )}
+                  {selectedMember.links.x && (
+                    <a
+                      href={selectedMember.links.x}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-[#225BBA] transition-colors"
+                    >
+                      <Twitter size={20} />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Details */}
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                {/* Command Style */}
+                <div className="font-mono text-xs mb-3">
+                  <span className="text-[#225BBA]">&gt;</span>{" "}
+                  <span className="text-slate-500">profile.load(&quot;{selectedMember.name}&quot;)</span>
+                </div>
+
+                <div className="space-y-2 font-mono text-xs text-slate-600 dark:text-slate-400">
+                  <div>
+                    <span className="text-[#225BBA]">→</span> 投资方向: {selectedMember.focus}
+                  </div>
+                  {selectedMember.projects.length > 0 && (
+                    <div>
+                      <span className="text-[#225BBA]">→</span> 过往项目: {selectedMember.projects.join("、")}
+                    </div>
+                  )}
+                  {selectedMember.bio && (
+                    <div className="text-slate-500 dark:text-slate-500 italic text-[11px] mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                      {selectedMember.bio}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer Note */}
       <p className="text-xs text-muted-foreground font-mono">
-        <span className="text-[#225BBA]">//</span> 16 人专业投资团队，覆盖 AI 应用、具身智能、芯片等方向。
+        <span className="text-[#225BBA]">//</span> 16 人专业投资团队，覆盖 AI 应用、具身智能、算力等方向。
       </p>
     </section>
   )
