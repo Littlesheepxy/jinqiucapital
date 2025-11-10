@@ -41,7 +41,7 @@ export default function AgentInterface() {
     定位: ["AI-Native", "Early-Stage", "Dual-Currency"],
     关注方向: ["AI 应用", "具身智能", "算力基础"],
     投资方法论: ["快决策", "长期陪伴", "增持投入"],
-    项目: ["Soil", "Talent-Q", "锦秋集", "锦秋会", "锦秋小饭桌"],
+    项目: ["Soil", "锦秋集", "锦秋会", "锦秋小饭桌"],
     团队规模: "16人",
     组合规模: "$1B+",
     被投企业: "30+",
