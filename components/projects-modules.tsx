@@ -54,15 +54,41 @@ export default function ProjectsModules() {
 
   return (
     <section id="projects" className="mb-12 scroll-mt-20">
-      <h2 className="text-2xl font-bold mb-8 text-foreground flex items-center gap-2 font-mono">
-        <Zap size={24} className="text-[#225BBA]" />
+      <motion.h2 
+        className="text-2xl font-bold mb-8 text-foreground flex items-center gap-2 font-mono"
+        initial={{ opacity: 0, x: -20 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          initial={{ rotate: 0 }}
+          whileInView={{ rotate: 360 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+        >
+          <Zap size={24} className="text-[#225BBA]" />
+        </motion.div>
         <span className="text-[#225BBA]">#</span> 项目矩阵
-      </h2>
+      </motion.h2>
 
-      {/* Module List Interface */}
-      <div className="mb-4 font-mono text-sm text-slate-600 dark:text-slate-400">
-        <span className="text-[#225BBA] font-bold">&gt;</span> modules.list()
-      </div>
+      {/* Module List Interface with Typing Effect */}
+      <motion.div 
+        className="mb-4 font-mono text-sm text-slate-600 dark:text-slate-400"
+        initial={{ opacity: 0, y: -10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
+        <motion.span 
+          className="text-[#225BBA] font-bold"
+          animate={{ opacity: [1, 0.5, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          &gt;
+        </motion.span>{" "}
+        modules.list()
+      </motion.div>
 
       {/* Projects List */}
       <motion.div
