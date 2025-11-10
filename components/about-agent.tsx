@@ -286,32 +286,6 @@ export default function AboutAgent() {
           </motion.div>
         ))}
       </motion.div>
-
-      {/* Stats Cards with Number Animation */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8"
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-        variants={containerVariants}
-      >
-        {stats.map((stat, index) => (
-          <motion.div
-            key={index}
-            variants={statVariants}
-            className="bg-muted border-2 border-[#225BBA] rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <motion.div
-              className="text-3xl font-bold mb-2 text-[#225BBA] font-mono"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.1 + 0.5 }}
-            >
-              {stat.num}
-            </motion.div>
-            <div className="text-sm text-muted-foreground">{stat.label}</div>
-          </motion.div>
-        ))}
-      </motion.div>
     </section>
   )
 }
