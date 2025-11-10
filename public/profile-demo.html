@@ -1,12 +1,17 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>肖杨 - AI产品经理 | AI职业展示主页</title>
+    <title>肖杨 - AI产品经理 | Personal Portfolio</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom Tailwind Config -->
     <script>
@@ -14,11 +19,30 @@
             theme: {
                 extend: {
                     colors: {
-                        'apple-blue': '#007AFF',
-                        'apple-gray': '#F5F5F7',
+                        primary: '#5B5BD6',
+                        secondary: '#8B8BFF',
                     },
                     fontFamily: {
-                        'sf': ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Inter', 'sans-serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) scale(1)' },
+                            '50%': { transform: 'translateY(-20px) scale(1.02)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
                     },
                 }
             }
@@ -28,93 +52,162 @@
     <!-- Custom Styles -->
     <style>
         * {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         
-        /* 玻璃态效果 */
+        body {
+            background: #fafafa;
+            overflow-x: hidden;
+        }
+        
+        /* Ultra Minimal Glass Effect */
         .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
         
-        .glass-dark {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* 柔光渐变背景 */
-        .gradient-hero {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-        
-        .gradient-glow {
-            background: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.1) 0%, transparent 50%);
-        }
-        
-        /* 悬停发光效果 */
-        .hover-glow {
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px) saturate(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(120%);
+            border: 1px solid rgba(0, 0, 0, 0.04);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .hover-glow:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 122, 255, 0.2);
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(91, 91, 214, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(91, 91, 214, 0.1);
         }
         
-        /* 渐入动画 */
-        .fade-in {
+        /* Gradient Orbs Background */
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            top: -10%;
+            right: -10%;
+            animation-delay: 0s;
+        }
+        
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            bottom: 10%;
+            left: -5%;
+            animation-delay: 2s;
+        }
+        
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            top: 40%;
+            left: 50%;
+            animation-delay: 4s;
+        }
+        
+        /* Scroll Reveal */
+        .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            animation: fadeInUp 0.8s ease-out forwards;
+            transform: translateY(60px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* 滚动渐入 */
-        .scroll-fade {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
-        
-        .scroll-fade.visible {
+        .reveal.active {
             opacity: 1;
             transform: translateY(0);
         }
         
-        /* 柔光按钮 */
-        .btn-primary {
-            background: linear-gradient(135deg, #007AFF 0%, #0051D5 100%);
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        /* Magnetic Button Effect */
+        .btn-magnetic {
+            position: relative;
+            overflow: hidden;
             transition: all 0.3s ease;
         }
         
-        .btn-primary:hover {
-            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
-            transform: translateY(-2px);
+        .btn-magnetic::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #5B5BD6, #8B8BFF);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
-        /* 光晕动画 */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        .btn-magnetic:hover::before {
+            opacity: 1;
         }
         
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
+        .btn-magnetic span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Minimal Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(91, 91, 214, 0.3);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(91, 91, 214, 0.5);
+        }
+        
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(135deg, #5B5BD6 0%, #8B8BFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Image Reveal */
+        .img-reveal {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .img-reveal::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: white;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .img-reveal.active::after {
+            transform: scaleX(1);
+            transform-origin: left;
         }
     </style>
 </head>
-<body class="bg-white text-gray-900 antialiased">
+<body class="antialiased">
     
     <!-- Navigation (Optional) -->
     <nav class="fixed top-0 w-full z-50 glass">
