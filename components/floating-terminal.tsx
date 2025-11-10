@@ -156,7 +156,14 @@ export default function FloatingTerminal() {
               ) : (
                 <div className="space-y-1">
                   {/* 已完成的命令 */}
-                  {state.commands.slice(0, -1).map((cmd) => (
+                  {(() => {
+                    const completedCommands = state.commands.slice(0, -1)
+                    console.log('📜 渲染已完成命令数量:', completedCommands.length)
+                    completedCommands.forEach((cmd, idx) => {
+                      console.log(`  命令${idx}:`, cmd.command, '| ID:', cmd.id)
+                    })
+                    return completedCommands
+                  })().map((cmd) => (
                     <div key={cmd.id} className="text-xs text-slate-300 mb-3">
                       <div className="text-green-400 font-semibold">
                         {">"} {cmd.command}
