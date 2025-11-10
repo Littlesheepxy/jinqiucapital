@@ -1,12 +1,20 @@
 [
   {
     "name": "Jinqiu Select",
+    "nameCn": "锦秋精选",
     "summary": "AI 报告解读与行业研究，深度分析 AI 创业生态的最新动向与机遇。",
-    "link": "#"
+    "link": "#",
+    "tags": ["行业研究", "AI报告", "投资洞察"],
+    "path": "/library/jinqiu-select",
+    "date": "2025-01"
   },
   {
     "name": "Jinqiu Scan",
+    "nameCn": "锦秋扫描",
     "summary": "AI 产品测评，解锁 100 个效率场景，帮助创业者找到最适合的 AI 工具。",
-    "link": "#"
+    "link": "#",
+    "tags": ["产品测评", "效率工具", "AI应用"],
+    "path": "/library/jinqiu-scan",
+    "date": "2025-01"
   }
 ]

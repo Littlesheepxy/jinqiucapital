@@ -7,7 +7,9 @@
     "links": {
       "linkedin": "https://linkedin.com",
       "x": "https://x.com"
-    }
+    },
+    "bio": "10年+ 机器人行业经验，专注具身智能投资",
+    "projects": ["宇树科技", "星尘智能"]
   },
   {
     "name": "李四",
@@ -17,48 +19,62 @@
     "links": {
       "linkedin": "https://linkedin.com",
       "x": "https://x.com"
-    }
+    },
+    "bio": "关注 AI 应用层创新与商业化",
+    "projects": []
   },
   {
     "name": "王五",
     "title": "投资经理",
     "focus": "模型基础",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "深度关注大模型与基础设施",
+    "projects": []
   },
   {
     "name": "刘六",
     "title": "分析师",
     "focus": "算力",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "算力芯片与基础设施研究",
+    "projects": []
   },
   {
     "name": "陈七",
     "title": "合伙人",
     "focus": "AI 应用",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "15年+ 投资经验，AI 应用领域专家",
+    "projects": []
   },
   {
     "name": "杨八",
     "title": "投资经理",
     "focus": "具身智能",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "机器人与自动化方向投资",
+    "projects": ["Dexmate", "World Engine"]
   },
   {
     "name": "黄九",
     "title": "分析师",
     "focus": "应用方向",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "AI 应用场景研究与分析",
+    "projects": []
   },
   {
     "name": "林十",
     "title": "合伙人",
     "focus": "算力与基础",
     "avatar": null,
-    "links": {}
+    "links": {},
+    "bio": "芯片与算力基础设施投资专家",
+    "projects": ["东方算芯", "光本位"]
   }
 ]

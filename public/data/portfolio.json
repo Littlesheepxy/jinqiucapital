@@ -4,55 +4,129 @@
     "category": "具身智能",
     "logo": null,
     "url": "https://example.com",
-    "founders": [{ "name": "创始人", "links": {} }]
+    "founders": [{ "name": "创始人", "links": {} }],
+    "description": "让智能更贴近身体",
+    "investmentDate": "2024-Q4",
+    "tags": ["机器人", "具身智能", "硬件"]
   },
   {
     "name": "星尘智能",
     "category": "具身智能",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "下一代智能机器人平台",
+    "investmentDate": "2024-Q3",
+    "tags": ["机器人", "AI", "具身智能"]
   },
   {
     "name": "地瓜机器人",
     "category": "具身智能",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "商用服务机器人",
+    "investmentDate": "2024-Q2",
+    "tags": ["服务机器人", "商业化"]
   },
   {
     "name": "乐享科技",
     "category": "具身智能",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "智能硬件创新",
+    "investmentDate": "2024-Q1",
+    "tags": ["硬件", "AI"]
+  },
+  {
+    "name": "流形空间",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [],
+    "description": "空间智能感知",
+    "investmentDate": "2023-Q4",
+    "tags": ["3D感知", "空间计算"]
+  },
+  {
+    "name": "首形科技",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [],
+    "description": "工业机器人解决方案",
+    "investmentDate": "2023-Q3",
+    "tags": ["工业机器人", "自动化"]
+  },
+  {
+    "name": "World Engine",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [],
+    "description": "世界模型驱动的机器人",
+    "investmentDate": "2024-Q4",
+    "tags": ["世界模型", "AI", "具身智能"]
+  },
+  {
+    "name": "Dexmate",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [],
+    "description": "灵巧操作机器人",
+    "investmentDate": "2024-Q3",
+    "tags": ["灵巧手", "精密操作"]
   },
   {
     "name": "东方算芯",
     "category": "芯片",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "AI 算力芯片",
+    "investmentDate": "2024-Q2",
+    "tags": ["芯片", "算力", "AI加速"]
   },
   {
     "name": "铭芯启睿",
     "category": "芯片",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "高性能计算芯片",
+    "investmentDate": "2024-Q1",
+    "tags": ["芯片", "HPC"]
   },
   {
     "name": "微纳核芯",
     "category": "芯片",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "边缘 AI 芯片",
+    "investmentDate": "2023-Q4",
+    "tags": ["边缘计算", "芯片"]
   },
   {
     "name": "澜昆微",
     "category": "芯片",
     "logo": null,
     "url": "https://example.com",
-    "founders": []
+    "founders": [],
+    "description": "存算一体芯片",
+    "investmentDate": "2023-Q3",
+    "tags": ["存算一体", "新架构"]
+  },
+  {
+    "name": "光本位",
+    "category": "芯片",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [],
+    "description": "光计算芯片",
+    "investmentDate": "2024-Q2",
+    "tags": ["光计算", "下一代芯片"]
   }
 ]
