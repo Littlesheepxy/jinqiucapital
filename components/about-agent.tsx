@@ -194,10 +194,9 @@ export default function AboutAgent() {
             {/* Answer */}
             <div className="pl-4 border-l-2 border-slate-200 dark:border-slate-700 group-hover:border-[#225BBA] transition-colors">
               <span className="text-[#225BBA] mr-2">→</span>
-              <span
-                className="text-slate-700 dark:text-slate-300"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(qa.answer) }}
-              />
+              <span className="text-slate-700 dark:text-slate-300">
+                {renderMarkdown(qa.answer)}
+              </span>
             </div>
 
             {/* Copy Link Hint */}
