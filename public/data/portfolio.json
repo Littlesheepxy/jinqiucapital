@@ -1,0 +1,58 @@
+[
+  {
+    "name": "宇树科技",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": [{ "name": "创始人", "links": {} }]
+  },
+  {
+    "name": "星尘智能",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "地瓜机器人",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "乐享科技",
+    "category": "具身智能",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "东方算芯",
+    "category": "芯片",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "铭芯启睿",
+    "category": "芯片",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "微纳核芯",
+    "category": "芯片",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  },
+  {
+    "name": "澜昆微",
+    "category": "芯片",
+    "logo": null,
+    "url": "https://example.com",
+    "founders": []
+  }
+]

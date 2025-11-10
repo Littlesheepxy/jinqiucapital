@@ -1,0 +1,64 @@
+[
+  {
+    "name": "张三",
+    "title": "合伙人",
+    "focus": "具身智能",
+    "avatar": null,
+    "links": {
+      "linkedin": "https://linkedin.com",
+      "x": "https://x.com"
+    }
+  },
+  {
+    "name": "李四",
+    "title": "投资经理",
+    "focus": "AI 应用",
+    "avatar": null,
+    "links": {
+      "linkedin": "https://linkedin.com",
+      "x": "https://x.com"
+    }
+  },
+  {
+    "name": "王五",
+    "title": "投资经理",
+    "focus": "模型基础",
+    "avatar": null,
+    "links": {}
+  },
+  {
+    "name": "刘六",
+    "title": "分析师",
+    "focus": "算力",
+    "avatar": null,
+    "links": {}
+  },
+  {
+    "name": "陈七",
+    "title": "合伙人",
+    "focus": "AI 应用",
+    "avatar": null,
+    "links": {}
+  },
+  {
+    "name": "杨八",
+    "title": "投资经理",
+    "focus": "具身智能",
+    "avatar": null,
+    "links": {}
+  },
+  {
+    "name": "黄九",
+    "title": "分析师",
+    "focus": "应用方向",
+    "avatar": null,
+    "links": {}
+  },
+  {
+    "name": "林十",
+    "title": "合伙人",
+    "focus": "算力与基础",
+    "avatar": null,
+    "links": {}
+  }
+]

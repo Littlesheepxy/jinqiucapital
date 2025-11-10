@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Soil 种子计划",
+    "summary": "种子阶段 AI 应用专项投资，帮助初创团队快速获得资金与产业支持。",
+    "link": "#",
+    "brand": {
+      "color": "#225BBA",
+      "icon": "🌱"
+    }
+  },
+  {
+    "name": "Talent-Q",
+    "summary": "AI 驱动的智能招聘助手，为创业企业优化人才获取流程。",
+    "link": "#",
+    "brand": {
+      "color": "#225BBA",
+      "icon": "👥"
+    }
+  },
+  {
+    "name": "锦秋集",
+    "summary": "来自锦秋的 AI Insider，定期分享行业研究与投资洞察。",
+    "link": "#",
+    "brand": {
+      "color": "#225BBA",
+      "icon": "📰"
+    }
+  },
+  {
+    "name": "锦秋会",
+    "summary": "一年一度的锦秋 CEO 大会，汇聚投资人、创业者与行业专家。",
+    "link": "#",
+    "brand": {
+      "color": "#225BBA",
+      "icon": "🎤"
+    }
+  },
+  {
+    "name": "锦秋小饭桌",
+    "summary": "创业者常态化闭门社交，促进被投企业间的交流与协作。",
+    "link": "#",
+    "brand": {
+      "color": "#225BBA",
+      "icon": "🍽️"
+    }
+  }
+]
