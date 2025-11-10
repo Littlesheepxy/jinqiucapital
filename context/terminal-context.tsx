@@ -114,44 +114,47 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
 
       console.log('✅ 命令数据找到:', commandData)
 
-      // 立即打开终端(如果未打开)
-      if (!state.isOpen) {
-        console.log('🔓 打开终端')
-        dispatch({ type: "TOGGLE_TERMINAL" })
-      }
-      
-      // 立即展开终端(如果最小化)
-      if (state.isMinimized) {
-        console.log('📖 展开终端')
-        dispatch({ type: "MAXIMIZE_TERMINAL" })
-      }
-
-      console.log('⏳ 开始执行命令')
-      dispatch({ type: "START_EXECUTION" })
-
-      // 模拟命令执行
+      // 使用setTimeout确保状态更新完成
       setTimeout(() => {
-        console.log('➕ 添加命令到历史')
-        dispatch({
-          type: "ADD_COMMAND",
-          payload: {
-            command: commandData.command,
-            output: commandData.output,
-            duration: commandData.duration,
-            module,
-            keyword,
-          },
-        })
+        // 立即打开终端(如果未打开)
+        if (!state.isOpen) {
+          console.log('🔓 打开终端')
+          dispatch({ type: "TOGGLE_TERMINAL" })
+        }
+        
+        // 立即展开终端(如果最小化)
+        if (state.isMinimized) {
+          console.log('📖 展开终端')
+          dispatch({ type: "MAXIMIZE_TERMINAL" })
+        }
 
-        dispatch({ type: "FINISH_EXECUTION" })
+        console.log('⏳ 开始执行命令')
+        dispatch({ type: "START_EXECUTION" })
 
-        // 滚动到最新命令
+        // 模拟命令执行
         setTimeout(() => {
-          if (terminalRef.current) {
-            terminalRef.current.scrollTop = terminalRef.current.scrollHeight
-          }
-        }, 100)
-      }, 300)
+          console.log('➕ 添加命令到历史')
+          dispatch({
+            type: "ADD_COMMAND",
+            payload: {
+              command: commandData.command,
+              output: commandData.output,
+              duration: commandData.duration,
+              module,
+              keyword,
+            },
+          })
+
+          dispatch({ type: "FINISH_EXECUTION" })
+
+          // 滚动到最新命令
+          setTimeout(() => {
+            if (terminalRef.current) {
+              terminalRef.current.scrollTop = terminalRef.current.scrollHeight
+            }
+          }, 100)
+        }, 300)
+      }, 10)
     })
   }
 

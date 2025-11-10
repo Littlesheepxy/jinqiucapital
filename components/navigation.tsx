@@ -46,10 +46,16 @@ export default function Navigation({ isDark, setIsDark, isMarkdownView = false, 
           {!isMarkdownView && terminalContext && (
             <button
               onClick={terminalContext.toggleTerminal}
-              className="p-2 hover:bg-muted rounded transition-colors text-foreground"
+              className="p-2 hover:bg-muted rounded transition-colors text-foreground relative"
               aria-label="切换终端"
             >
               <Terminal size={18} />
+              {/* 未读命令提示气泡 */}
+              {!terminalContext.state.isOpen && terminalContext.state.commands.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#225BBA] rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                  {terminalContext.state.commands.length}
+                </span>
+              )}
             </button>
           )}
           
