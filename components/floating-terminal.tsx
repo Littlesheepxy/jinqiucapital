@@ -169,23 +169,27 @@ export default function FloatingTerminal() {
                   ))}
 
                   {/* 当前流式输出的命令 */}
-                  {streamedLines.map((line, idx) => (
-                    <motion.div
-                      key={`stream-${idx}`}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className={`text-xs ${
-                        line.startsWith(">")
-                          ? "text-green-400 font-semibold"
-                          : line.startsWith("→")
-                          ? "text-slate-400 ml-2"
-                          : "text-slate-500 ml-2"
-                      }`}
-                    >
-                      {line}
-                    </motion.div>
-                  ))}
+                  {streamedLines.map((line, idx) => {
+                    // 安全检查: 确保line不是undefined
+                    const safeLine = line || ""
+                    return (
+                      <motion.div
+                        key={`stream-${idx}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`text-xs ${
+                          safeLine.startsWith(">")
+                            ? "text-green-400 font-semibold"
+                            : safeLine.startsWith("→")
+                            ? "text-slate-400 ml-2"
+                            : "text-slate-500 ml-2"
+                        }`}
+                      >
+                        {safeLine}
+                      </motion.div>
+                    )
+                  })}
                 </div>
               )}
 
