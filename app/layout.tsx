@@ -8,6 +8,11 @@ const noteSansSC = Noto_Sans_SC({ subsets: ["latin", "cyrillic"] })
 export const metadata: Metadata = {
   title: "锦秋基金 - Jinqiu Capital",
   description: "AI-Native 双币早期投资机构，关注 AI 应用、具身智能、算力与模型基础。",
+  icons: {
+    icon: "/jinqiu-logo.png",
+    shortcut: "/jinqiu-logo.png",
+    apple: "/jinqiu-logo.png",
+  },
   openGraph: {
     title: "锦秋基金 - Jinqiu Capital",
     description: "AI-Native 双币早期投资机构，关注 AI 应用、具身智能、算力与模型基础。",

@@ -59,7 +59,9 @@ export default function FloatingTerminal() {
       const streamInterval = setInterval(() => {
         if (currentLine < allLines.length) {
           console.log(`📤 输出第${currentLine}行:`, allLines[currentLine])
-          setStreamedLines((prev) => [...prev, allLines[currentLine]])
+          // 使用 slice 直接从 allLines 获取当前应该显示的所有行
+          const linesToShow = allLines.slice(0, currentLine + 1)
+          setStreamedLines(linesToShow)
           currentLine++
           
           // 自动滚动
