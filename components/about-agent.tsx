@@ -235,23 +235,43 @@ export default function AboutAgent() {
           <motion.div
             key={index}
             variants={itemVariants}
+            whileHover={{ 
+              x: 8,
+              transition: { duration: 0.3 }
+            }}
             className="relative group"
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            {/* Question */}
-            <div className="mb-2">
-              <span className="text-[#225BBA] font-bold text-base">&gt; </span>
+            {/* Question with Animation */}
+            <motion.div 
+              className="mb-2"
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ delay: index * 0.2 + 0.3 }}
+            >
+              <motion.span 
+                className="text-[#225BBA] font-bold text-base"
+                animate={hoveredIndex === index ? { x: [0, 3, 0] } : {}}
+                transition={{ duration: 0.5 }}
+              >
+                &gt;{" "}
+              </motion.span>
               <span className="text-slate-600 dark:text-slate-400">{qa.question}</span>
-            </div>
+            </motion.div>
 
-            {/* Answer */}
-            <div className="pl-4 border-l-2 border-slate-200 dark:border-slate-700 group-hover:border-[#225BBA] transition-colors">
+            {/* Answer with Fade-in */}
+            <motion.div 
+              className="pl-4 border-l-2 border-slate-200 dark:border-slate-700 group-hover:border-[#225BBA] transition-colors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ delay: index * 0.2 + 0.4 }}
+            >
               <span className="text-[#225BBA] mr-2">→</span>
               <span className="text-slate-700 dark:text-slate-300">
                 {renderMarkdown(qa.answer)}
               </span>
-            </div>
+            </motion.div>
 
             {/* Copy Link Hint */}
             {hoveredIndex === index && (
