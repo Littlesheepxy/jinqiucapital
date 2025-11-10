@@ -10,6 +10,8 @@ import PortfolioQuery from "@/components/portfolio-query"
 import ProjectsModules from "@/components/projects-modules"
 import LibrarySystem from "@/components/library-system"
 import AgentInterface from "@/components/agent-interface"
+import FloatingTerminal from "@/components/floating-terminal"
+import { TerminalProvider } from "@/context/terminal-context"
 import { FileText, Zap, Users, Briefcase, BookOpen, Mail } from "lucide-react"
 
 export default function Page() {
@@ -55,7 +57,7 @@ export default function Page() {
   }, [])
 
   return (
-    <>
+    <TerminalProvider>
       <Navigation isDark={isDark} setIsDark={setIsDark} />
       <main className="min-h-screen bg-background text-foreground">
         {/* Hero Agent Section */}
@@ -176,6 +178,9 @@ export default function Page() {
       
       {/* Agent Interface - Floating Button */}
       <AgentInterface />
-    </>
+      
+      {/* Floating Terminal */}
+      <FloatingTerminal />
+    </TerminalProvider>
   )
 }

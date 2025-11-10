@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import ClickableKeyword from "./clickable-keyword"
 
 export default function HeroAgent({ onStartClick }: { onStartClick?: () => void }) {
   const [showButton, setShowButton] = useState(false)
@@ -54,30 +55,34 @@ export default function HeroAgent({ onStartClick }: { onStartClick?: () => void 
     typeChar()
   }, [systemBooted, currentLineIndex])
 
-  // 解析文本并高亮关键词
+  // 解析文本并渲染可点击的关键词
   const renderHighlightedText = (text: string) => {
-    const keywords = [
+    // 定义可点击的关键词
+    const clickableMap: { [key: string]: { keyword: string; module: string } } = {
+      "AI-Native": { keyword: "AI-Native", module: "hero" },
+      "早期投资机构": { keyword: "早期投资机构", module: "hero" },
+    }
+    
+    // 其他高亮关键词
+    const highlightKeywords = [
       "锦秋基金",
-      "AI-Native",
       "双币早期投资机构",
       "12 年期基金",
       "AI 应用",
       "具身智能",
       "算力基础与模型基础",
-      "60\\+",
+      "60+",
     ]
+    
+    // 先替换高亮关键词
     let result = text
-
-    keywords.forEach((keyword) => {
+    highlightKeywords.forEach((keyword) => {
       result = result.replace(
-        new RegExp(keyword, "g"),
+        new RegExp(keyword.replace("+", "\\+"), "g"),
         `<span class="text-[#225BBA] font-semibold">${keyword}</span>`
       )
     })
-
-    // 高亮 > 提示符
-    result = result.replace(/^>/gm, '<span class="text-[#225BBA] font-bold">></span>')
-
+    
     return result
   }
 
