@@ -187,6 +187,13 @@ export default function FloatingTerminal() {
                     const isCommand = safeLine.startsWith(">")
                     const isArrow = safeLine.startsWith("→")
                     
+                    console.log(`🎨 渲染第${idx}行:`, {
+                      content: safeLine,
+                      isCommand,
+                      isArrow,
+                      willBeGreen: isCommand
+                    })
+                    
                     return (
                       <motion.div
                         key={`stream-${idx}`}
