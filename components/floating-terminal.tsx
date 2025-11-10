@@ -172,6 +172,10 @@ export default function FloatingTerminal() {
                   {streamedLines.map((line, idx) => {
                     // 安全检查: 确保line不是undefined
                     const safeLine = line || ""
+                    // 判断是否是命令行(以>开头)或者输出内容
+                    const isCommand = safeLine.startsWith(">")
+                    const isArrow = safeLine.startsWith("→")
+                    
                     return (
                       <motion.div
                         key={`stream-${idx}`}
@@ -179,11 +183,11 @@ export default function FloatingTerminal() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.2 }}
                         className={`text-xs ${
-                          safeLine.startsWith(">")
+                          isCommand
                             ? "text-green-400 font-semibold"
-                            : safeLine.startsWith("→")
-                            ? "text-slate-400 ml-2"
-                            : "text-slate-500 ml-2"
+                            : isArrow
+                            ? "text-slate-300 ml-2"
+                            : "text-slate-400 ml-2"
                         }`}
                       >
                         {safeLine}

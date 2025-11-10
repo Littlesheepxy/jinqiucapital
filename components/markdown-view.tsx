@@ -22,7 +22,7 @@ export default function MarkdownView() {
             <p>你好，我是锦秋基金。</p>
             <p>一家 AI-Native 双币早期投资机构，12 年期基金。</p>
             <p>我们长期关注 AI 应用、具身智能、算力基础与模型基础等前沿方向。</p>
-            <p>目前已投资 60+ 家企业。</p>
+            <p>目前已投资 70+ 家企业。</p>
           </div>
         </section>
 
@@ -95,7 +95,7 @@ export default function MarkdownView() {
         {/* 投资组合 */}
         <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
           <h2 className="text-2xl font-bold mb-6">投资组合</h2>
-          <p className="mb-4">锦秋基金已投资 60+ 家优秀企业，覆盖AI应用、具身智能、算力基础等多个领域。</p>
+          <p className="mb-4">锦秋基金已投资 70+ 家优秀企业，覆盖AI应用、具身智能、算力基础等多个领域。</p>
           
           <h3 className="text-lg font-semibold mb-3 mt-6">AI 应用</h3>
           <p className="text-sm text-muted-foreground mb-2">从底层技术到应用场景的全面布局</p>

@@ -15,7 +15,7 @@ export default function HeroAgent({ onStartClick }: { onStartClick?: () => void 
     "你好，我是锦秋基金。",
     "一家 AI-Native 双币早期投资机构，12 年期基金。",
     "我们长期关注 AI 应用、具身智能、算力基础与模型基础等前沿方向。",
-    "目前已投资 60+ 家企业。",
+    "目前已投资 70+ 家企业。",
     "准备了解我们的故事吗？",
   ]
 
@@ -70,7 +70,7 @@ export default function HeroAgent({ onStartClick }: { onStartClick?: () => void 
       "AI 应用",
       "具身智能",
       "算力基础与模型基础",
-      "60+",
+      "70+",
     ]
     
     let result: React.ReactNode[] = [text]

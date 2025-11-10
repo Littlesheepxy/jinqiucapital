@@ -45,7 +45,7 @@ export default function AboutAgent() {
 
   const stats = [
     { num: "12 年期", label: "基金周期" },
-    { num: "60+", label: "被投企业" },
+    { num: "70+", label: "被投企业" },
     { num: "AI-Native", label: "双币早期基金" },
   ]
 
