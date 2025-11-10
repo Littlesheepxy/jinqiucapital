@@ -10,15 +10,36 @@ export default function FloatingTerminal() {
   const [streamedLines, setStreamedLines] = useState<string[]>([])
   const [currentStreamingId, setCurrentStreamingId] = useState<string | null>(null)
 
+  // 调试日志
+  useEffect(() => {
+    console.log('🖥️ FloatingTerminal state更新:', {
+      isOpen: state.isOpen,
+      commandsLength: state.commands.length,
+      isExecuting: state.isExecuting,
+      currentStreamingId
+    })
+  }, [state.isOpen, state.commands.length, state.isExecuting, currentStreamingId])
+
   // 流式输出动画
   useEffect(() => {
+    console.log('🔄 流式输出useEffect触发:', {
+      isOpen: state.isOpen,
+      commandsLength: state.commands.length,
+      currentStreamingId
+    })
+    
     // 必须在终端打开时才执行
-    if (!state.isOpen || state.commands.length === 0) return
+    if (!state.isOpen || state.commands.length === 0) {
+      console.log('⏸️ 跳过流式输出: 终端未打开或无命令')
+      return
+    }
 
     const latestCommand = state.commands[state.commands.length - 1]
+    console.log('📦 最新命令:', latestCommand)
     
     // 如果这个命令还没有被流式输出过
     if (latestCommand.id !== currentStreamingId) {
+      console.log('▶️ 开始新的流式输出:', latestCommand.id)
       setCurrentStreamingId(latestCommand.id)
       setStreamedLines([])
       
@@ -45,10 +66,16 @@ export default function FloatingTerminal() {
           }, 50)
         } else {
           clearInterval(streamInterval)
+          console.log('✅ 流式输出完成')
         }
       }, 80)
 
-      return () => clearInterval(streamInterval)
+      return () => {
+        console.log('🧹 清理流式输出定时器')
+        clearInterval(streamInterval)
+      }
+    } else {
+      console.log('⏭️ 命令已流式输出过,跳过')
     }
   }, [state.commands, state.isOpen, currentStreamingId, terminalRef])
 
