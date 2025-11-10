@@ -51,40 +51,6 @@ export default function MarkdownView() {
           </p>
         </section>
 
-        {/* 关键信息 */}
-        <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
-          <h2 className="text-2xl font-bold mb-6">关键信息</h2>
-          
-          <h3 className="text-lg font-semibold mb-3">身份定位</h3>
-          <ul>
-            <li>AI-Native</li>
-            <li>Early-Stage</li>
-            <li>Dual-Currency</li>
-          </ul>
-
-          <h3 className="text-lg font-semibold mb-3 mt-6">投资方向</h3>
-          <ul>
-            <li>AI 应用</li>
-            <li>具身智能</li>
-            <li>算力基础</li>
-            <li>模型基础</li>
-          </ul>
-
-          <h3 className="text-lg font-semibold mb-3 mt-6">投资理念</h3>
-          <ul>
-            <li>快决策 (Fast Decision)</li>
-            <li>长期陪伴 (Long-term Partnership)</li>
-            <li>增持投入 (Follow-on Investment)</li>
-          </ul>
-
-          <h3 className="text-lg font-semibold mb-3 mt-6">核心数据</h3>
-          <ul>
-            <li>基金周期: 12 年期</li>
-            <li>被投企业: 60+</li>
-            <li>基金类型: AI-Native 双币早期基金</li>
-          </ul>
-        </section>
-
         {/* 团队 */}
         <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
           <h2 className="text-2xl font-bold mb-6">团队</h2>

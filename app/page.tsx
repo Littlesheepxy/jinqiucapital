@@ -100,51 +100,6 @@ export default function Page() {
             {/* Divider */}
             <div className="border-t border-border my-10" />
 
-            {/* Key Facts */}
-            <section id="facts" className="mb-12 scroll-mt-20">
-              <h2 className="text-2xl font-bold mb-6 text-foreground">关键信息</h2>
-
-              <div className="mb-6">
-                <h3 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">身份定位</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["AI-Native", "Early-Stage", "Dual-Currency"].map((tag) => (
-                    <code
-                      key={tag}
-                      className="px-2 py-1 bg-muted border border-border text-foreground text-xs font-mono rounded"
-                    >
-                      {tag}
-                    </code>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">关注方向</h3>
-                <p className="text-sm font-mono text-foreground bg-muted border border-border p-2 rounded">
-                  AI 应用 | 具身智能 | 算力与模型基础
-                </p>
-              </div>
-
-              <div className="mb-6">
-                <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-                  投资方法论
-                </h3>
-                <p className="text-sm font-mono text-foreground bg-muted border border-border p-2 rounded">
-                  快决策 | 长期陪伴 | 增持投入
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">机构调性</h3>
-                <p className="text-sm font-mono text-foreground bg-muted border border-border p-2 rounded">
-                  敢 | 快 | 灵活 | 创新
-                </p>
-              </div>
-            </section>
-
-            {/* Divider */}
-            <div className="border-t border-border my-10" />
-
             {/* Team - Agent Style */}
             <TeamAgent />
 
