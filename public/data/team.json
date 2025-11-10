@@ -1,80 +1,146 @@
 [
   {
-    "name": "张三",
-    "title": "合伙人",
-    "focus": "具身智能",
+    "name": "杨洁",
+    "title": "Founding Partner",
+    "focus": "AI-Native投资",
     "avatar": null,
-    "links": {
-      "linkedin": "https://linkedin.com",
-      "x": "https://x.com"
-    },
-    "bio": "10年+ 机器人行业经验，专注具身智能投资",
-    "projects": ["宇树科技", "星尘智能"]
-  },
-  {
-    "name": "李四",
-    "title": "投资经理",
-    "focus": "AI 应用",
-    "avatar": null,
-    "links": {
-      "linkedin": "https://linkedin.com",
-      "x": "https://x.com"
-    },
-    "bio": "关注 AI 应用层创新与商业化",
+    "links": {},
+    "bio": "锦秋基金创始合伙人",
     "projects": []
   },
   {
-    "name": "王五",
-    "title": "投资经理",
-    "focus": "模型基础",
+    "name": "臧天宇",
+    "title": "Partner",
+    "focus": "AI应用与具身智能",
     "avatar": null,
     "links": {},
-    "bio": "深度关注大模型与基础设施",
+    "bio": "锦秋基金合伙人",
     "projects": []
   },
   {
-    "name": "刘六",
-    "title": "分析师",
-    "focus": "算力",
+    "name": "郑晓超",
+    "title": "Partner",
+    "focus": "算力与模型基础",
     "avatar": null,
     "links": {},
-    "bio": "算力芯片与基础设施研究",
+    "bio": "锦秋基金合伙人",
     "projects": []
   },
   {
-    "name": "陈七",
-    "title": "合伙人",
-    "focus": "AI 应用",
+    "name": "杨秉慧",
+    "title": "Investor",
+    "focus": "AI应用",
     "avatar": null,
     "links": {},
-    "bio": "15年+ 投资经验，AI 应用领域专家",
+    "bio": "投资团队成员",
     "projects": []
   },
   {
-    "name": "杨八",
-    "title": "投资经理",
-    "focus": "具身智能",
+    "name": "石亚琼",
+    "title": "Investor",
+    "focus": "AI应用",
     "avatar": null,
     "links": {},
-    "bio": "机器人与自动化方向投资",
-    "projects": ["Dexmate", "World Engine"]
-  },
-  {
-    "name": "黄九",
-    "title": "分析师",
-    "focus": "应用方向",
-    "avatar": null,
-    "links": {},
-    "bio": "AI 应用场景研究与分析",
+    "bio": "投资团队成员",
     "projects": []
   },
   {
-    "name": "林十",
-    "title": "合伙人",
-    "focus": "算力与基础",
+    "name": "周欣",
+    "title": "Investor",
+    "focus": "AI应用",
     "avatar": null,
     "links": {},
-    "bio": "芯片与算力基础设施投资专家",
-    "projects": ["东方算芯", "光本位"]
+    "bio": "投资团队成员",
+    "projects": []
+  },
+  {
+    "name": "龙杰",
+    "title": "Investor",
+    "focus": "AI应用",
+    "avatar": null,
+    "links": {},
+    "bio": "投资团队成员",
+    "projects": []
+  },
+  {
+    "name": "廖智媛",
+    "title": "Investor",
+    "focus": "AI应用",
+    "avatar": null,
+    "links": {},
+    "bio": "投资团队成员",
+    "projects": []
+  },
+  {
+    "name": "施立成",
+    "title": "Investor",
+    "focus": "AI应用",
+    "avatar": null,
+    "links": {},
+    "bio": "投资团队成员",
+    "projects": []
+  },
+  {
+    "name": "谢昊翔",
+    "title": "Investor",
+    "focus": "AI应用",
+    "avatar": null,
+    "links": {},
+    "bio": "投资团队成员",
+    "projects": []
+  },
+  {
+    "name": "李轻舟",
+    "title": "Financial Manager",
+    "focus": "财务管理",
+    "avatar": null,
+    "links": {},
+    "bio": "财务团队负责人",
+    "projects": []
+  },
+  {
+    "name": "乔众龙",
+    "title": "Financial Manager",
+    "focus": "财务管理",
+    "avatar": null,
+    "links": {},
+    "bio": "财务团队成员",
+    "projects": []
+  },
+  {
+    "name": "谭逸",
+    "title": "Legal Manager",
+    "focus": "法务管理",
+    "avatar": null,
+    "links": {},
+    "bio": "法务团队负责人",
+    "projects": []
+  },
+  {
+    "name": "张旭",
+    "title": "HR Manager",
+    "focus": "人力资源",
+    "avatar": null,
+    "links": {},
+    "bio": "人力资源负责人",
+    "projects": []
+  },
+  {
+    "name": "肖杨",
+    "title": "Product Manager",
+    "focus": "产品管理",
+    "avatar": null,
+    "links": {},
+    "bio": "产品团队负责人",
+    "projects": []
+  },
+  {
+    "name": "马梦真",
+    "title": "Branding Manager",
+    "focus": "品牌管理",
+    "avatar": null,
+    "links": {},
+    "bio": "品牌团队负责人",
+    "projects": []
   }
 ]
