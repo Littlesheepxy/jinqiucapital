@@ -52,9 +52,13 @@ export default function FloatingTerminal() {
         "",
       ]
 
+      console.log('📝 准备流式输出的内容:', allLines)
+      console.log('📝 第一行(命令):', allLines[0])
+
       let currentLine = 0
       const streamInterval = setInterval(() => {
         if (currentLine < allLines.length) {
+          console.log(`📤 输出第${currentLine}行:`, allLines[currentLine])
           setStreamedLines((prev) => [...prev, allLines[currentLine]])
           currentLine++
           
