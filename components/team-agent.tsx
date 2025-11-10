@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { Users, Linkedin, Twitter, X } from "lucide-react"
+import { Users, Linkedin, Twitter, X, Plus } from "lucide-react"
 import ClickableKeyword from "./clickable-keyword"
 
 interface TeamMember {
@@ -107,6 +107,35 @@ export default function TeamAgent() {
             </div>
           </motion.div>
         ))}
+
+        {/* Join Us Card */}
+        <motion.div
+          variants={cardVariants}
+          className="relative group"
+        >
+          <a
+            href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block h-full"
+          >
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-3 bg-slate-50 dark:bg-slate-800/50 transition-all hover:border-[#225BBA] hover:bg-slate-100 dark:hover:bg-slate-800 hover:shadow-md h-full flex flex-col items-center justify-center cursor-pointer">
+              {/* Plus Icon */}
+              <div className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center bg-gradient-to-br from-[#225BBA] to-[#4facfe] text-white">
+                <Plus size={24} />
+              </div>
+
+              {/* Text */}
+              <h3 className="font-semibold text-sm text-center text-[#225BBA] mb-1">
+                加入我们
+              </h3>
+              
+              <p className="text-xs text-center text-muted-foreground">
+                We&apos;re Hiring
+              </p>
+            </div>
+          </a>
+        </motion.div>
       </motion.div>
 
       {/* Modal for Member Details */}
