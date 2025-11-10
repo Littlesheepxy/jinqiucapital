@@ -85,6 +85,137 @@ export default function MarkdownView() {
           </ul>
         </section>
 
+        {/* 团队 */}
+        <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
+          <h2 className="text-2xl font-bold mb-6">团队</h2>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">张三</h3>
+              <p className="text-muted-foreground text-sm mb-2">创始合伙人</p>
+              <p className="text-sm">20年投资经验，专注AI领域早期投资</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">李四</h3>
+              <p className="text-muted-foreground text-sm mb-2">投资合伙人</p>
+              <p className="text-sm">前知名科技公司高管，深耕具身智能领域</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">王五</h3>
+              <p className="text-muted-foreground text-sm mb-2">投资总监</p>
+              <p className="text-sm">专注算力基础设施和模型技术投资</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 投资组合 */}
+        <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
+          <h2 className="text-2xl font-bold mb-6">投资组合</h2>
+          <p className="mb-4">锦秋基金已投资 60+ 家优秀企业，覆盖AI应用、具身智能、算力基础等多个领域。</p>
+          
+          <h3 className="text-lg font-semibold mb-3 mt-6">AI 应用</h3>
+          <ul>
+            <li>智能办公助手</li>
+            <li>AI设计工具</li>
+            <li>智能客服平台</li>
+            <li>AI内容生成</li>
+          </ul>
+
+          <h3 className="text-lg font-semibold mb-3 mt-6">具身智能</h3>
+          <ul>
+            <li>人形机器人</li>
+            <li>工业自动化</li>
+            <li>自动驾驶</li>
+            <li>智能配送</li>
+          </ul>
+
+          <h3 className="text-lg font-semibold mb-3 mt-6">算力基础</h3>
+          <ul>
+            <li>AI芯片</li>
+            <li>云计算平台</li>
+            <li>边缘计算</li>
+          </ul>
+
+          <h3 className="text-lg font-semibold mb-3 mt-6">模型基础</h3>
+          <ul>
+            <li>大语言模型</li>
+            <li>多模态模型</li>
+            <li>AI框架</li>
+          </ul>
+        </section>
+
+        {/* 项目与模块 */}
+        <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
+          <h2 className="text-2xl font-bold mb-6">开源项目</h2>
+          <p className="mb-4">我们支持并参与多个开源项目，推动AI技术的发展和应用。</p>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">jinqiu-ai-framework</h3>
+              <p className="text-sm text-muted-foreground">轻量级AI应用开发框架</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">portfolio-tracker</h3>
+              <p className="text-sm text-muted-foreground">投资组合管理工具</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">ai-benchmarks</h3>
+              <p className="text-sm text-muted-foreground">AI模型性能评测平台</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 知识库 */}
+        <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
+          <h2 className="text-2xl font-bold mb-6">知识库</h2>
+          <p className="mb-4">分享我们对AI行业的思考和洞察。</p>
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                <a href="#" className="text-[#225BBA] hover:underline">
+                  AI应用的下一个十年
+                </a>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">2024-12-15</p>
+              <p className="text-sm">探讨AI应用的发展趋势和投资机会</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                <a href="#" className="text-[#225BBA] hover:underline">
+                  具身智能：从实验室到产业
+                </a>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">2024-11-20</p>
+              <p className="text-sm">分析具身智能的技术突破和商业化路径</p>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                <a href="#" className="text-[#225BBA] hover:underline">
+                  算力基础设施的变革
+                </a>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">2024-10-10</p>
+              <p className="text-sm">深入解析AI时代的算力需求和供给</p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                <a href="#" className="text-[#225BBA] hover:underline">
+                  大模型的商业化之路
+                </a>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-2">2024-09-05</p>
+              <p className="text-sm">讨论大语言模型的商业模式和盈利路径</p>
+            </div>
+          </div>
+        </section>
+
         {/* 联系方式 */}
         <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
           <h2 className="text-2xl font-bold mb-6">联系我们</h2>
