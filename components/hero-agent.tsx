@@ -57,19 +57,15 @@ export default function HeroAgent({ onStartClick }: { onStartClick?: () => void 
 
   // 解析文本并渲染可点击的关键词
   const renderHighlightedText = (text: string) => {
-    const parts: React.ReactNode[] = []
-    let remaining = text
-    
-    // 定义可点击的关键词
+    // 定义可点击的关键词(按优先级排序,避免冲突)
     const clickableKeywords = [
       { text: "AI-Native", module: "hero" },
-      { text: "早期投资机构", module: "hero" },
+      { text: "双币早期投资机构", module: "hero", keyword: "早期投资机构" }, // 匹配整个词组,但命令用"早期投资机构"
     ]
     
     // 其他高亮关键词
     const highlightKeywords = [
       "锦秋基金",
-      "双币",
       "12 年期基金",
       "AI 应用",
       "具身智能",
@@ -77,58 +73,56 @@ export default function HeroAgent({ onStartClick }: { onStartClick?: () => void 
       "60+",
     ]
     
-    // 先处理可点击关键词
-    clickableKeywords.forEach(({ text: keyword, module }) => {
-      const index = remaining.indexOf(keyword)
-      if (index !== -1) {
-        // 添加前面的文本
-        if (index > 0) {
-          parts.push(remaining.substring(0, index))
+    let result: React.ReactNode[] = [text]
+    
+    // 处理每个可点击关键词
+    clickableKeywords.forEach(({ text: searchText, module, keyword }) => {
+      const newResult: React.ReactNode[] = []
+      
+      result.forEach((part) => {
+        if (typeof part === 'string') {
+          const segments = part.split(searchText)
+          segments.forEach((segment, index) => {
+            if (index > 0) {
+              // 添加可点击关键词
+              newResult.push(
+                <ClickableKeyword 
+                  key={`${keyword || searchText}-${Math.random()}`} 
+                  keyword={keyword || searchText} 
+                  module={module}
+                >
+                  {searchText}
+                </ClickableKeyword>
+              )
+            }
+            if (segment) {
+              newResult.push(segment)
+            }
+          })
+        } else {
+          newResult.push(part)
         }
-        // 添加可点击关键词
-        parts.push(
-          <ClickableKeyword key={`${keyword}-${parts.length}`} keyword={keyword} module={module}>
-            {keyword}
-          </ClickableKeyword>
-        )
-        // 更新剩余文本
-        remaining = remaining.substring(index + keyword.length)
-      }
+      })
+      
+      result = newResult
     })
     
-    // 添加剩余文本
-    if (remaining) {
-      parts.push(remaining)
-    }
-    
-    // 如果没有可点击关键词,直接返回高亮处理后的文本
-    if (parts.length === 0) {
-      let result = text
-      highlightKeywords.forEach((keyword) => {
-        result = result.replace(
-          new RegExp(keyword.replace("+", "\\+"), "g"),
-          `<span class="text-[#225BBA] font-semibold">${keyword}</span>`
-        )
-      })
-      return <span dangerouslySetInnerHTML={{ __html: result }} />
-    }
-    
-    // 对非关键词部分应用高亮
-    const finalParts = parts.map((part, index) => {
+    // 对字符串部分应用高亮
+    const finalResult = result.map((part, index) => {
       if (typeof part === 'string') {
-        let result = part
+        let htmlString = part
         highlightKeywords.forEach((keyword) => {
-          result = result.replace(
+          htmlString = htmlString.replace(
             new RegExp(keyword.replace("+", "\\+"), "g"),
             `<span class="text-[#225BBA] font-semibold">${keyword}</span>`
           )
         })
-        return <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: result }} />
+        return <span key={`text-${index}`} dangerouslySetInnerHTML={{ __html: htmlString }} />
       }
       return part
     })
     
-    return <>{finalParts}</>
+    return <>{finalResult}</>
   }
 
   return (

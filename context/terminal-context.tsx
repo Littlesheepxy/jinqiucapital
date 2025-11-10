@@ -101,29 +101,37 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const terminalRef = useRef<HTMLDivElement>(null)
 
   const executeCommand = (keyword: string, module: string) => {
+    console.log('🎯 executeCommand调用:', { keyword, module, currentState: state })
+    
     // 导入命令数据
     import("@/lib/terminal-commands").then(({ terminalCommands }) => {
       const commandData = terminalCommands[module]?.[keyword]
       
       if (!commandData) {
-        console.warn(`Command not found: ${module} -> ${keyword}`)
+        console.warn(`❌ Command not found: ${module} -> ${keyword}`)
         return
       }
 
+      console.log('✅ 命令数据找到:', commandData)
+
       // 立即打开终端(如果未打开)
       if (!state.isOpen) {
+        console.log('🔓 打开终端')
         dispatch({ type: "TOGGLE_TERMINAL" })
       }
       
       // 立即展开终端(如果最小化)
       if (state.isMinimized) {
+        console.log('📖 展开终端')
         dispatch({ type: "MAXIMIZE_TERMINAL" })
       }
 
+      console.log('⏳ 开始执行命令')
       dispatch({ type: "START_EXECUTION" })
 
       // 模拟命令执行
       setTimeout(() => {
+        console.log('➕ 添加命令到历史')
         dispatch({
           type: "ADD_COMMAND",
           payload: {
