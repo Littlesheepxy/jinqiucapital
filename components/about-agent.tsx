@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { useInView } from "framer-motion"
 import { useRef, useState } from "react"
+import ClickableKeyword from "./clickable-keyword"
 
 interface QA {
   question: string
@@ -48,9 +49,91 @@ export default function AboutAgent() {
     { num: "AI-Native", label: "双币早期基金" },
   ]
 
-  // 解析 markdown 加粗
+  // 解析 markdown 加粗并添加可点击关键词
   const renderMarkdown = (text: string) => {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#225BBA]">$1</strong>')
+    const parts: React.ReactNode[] = []
+    let remaining = text
+    
+    // 定义可点击的关键词
+    const clickableKeywords = [
+      { text: "AI 应用", module: "about" },
+      { text: "具身智能", module: "about" },
+      { text: "算力基础与模型基础", module: "about" },
+      { text: "快决策", module: "about" },
+    ]
+    
+    // 先移除markdown语法,提取加粗内容
+    const boldPattern = /\*\*(.*?)\*\*/g
+    const segments: { text: string; isBold: boolean }[] = []
+    let lastIndex = 0
+    let match
+    
+    while ((match = boldPattern.exec(text)) !== null) {
+      // 添加非加粗部分
+      if (match.index > lastIndex) {
+        segments.push({ text: text.substring(lastIndex, match.index), isBold: false })
+      }
+      // 添加加粗部分
+      segments.push({ text: match[1], isBold: true })
+      lastIndex = match.index + match[0].length
+    }
+    // 添加剩余部分
+    if (lastIndex < text.length) {
+      segments.push({ text: text.substring(lastIndex), isBold: false })
+    }
+    
+    // 处理每个segment
+    segments.forEach((segment, segIndex) => {
+      let processed = false
+      
+      // 检查是否包含可点击关键词
+      for (const { text: keyword, module } of clickableKeywords) {
+        if (segment.text.includes(keyword)) {
+          const keywordIndex = segment.text.indexOf(keyword)
+          
+          // 前面的文本
+          if (keywordIndex > 0) {
+            const before = segment.text.substring(0, keywordIndex)
+            parts.push(
+              segment.isBold ? 
+                <strong key={`bold-before-${segIndex}`} className="text-[#225BBA]">{before}</strong> :
+                <span key={`before-${segIndex}`}>{before}</span>
+            )
+          }
+          
+          // 可点击关键词
+          parts.push(
+            <ClickableKeyword key={`keyword-${segIndex}`} keyword={keyword} module={module}>
+              {segment.isBold ? <strong className="text-[#225BBA]">{keyword}</strong> : keyword}
+            </ClickableKeyword>
+          )
+          
+          // 后面的文本
+          const after = segment.text.substring(keywordIndex + keyword.length)
+          if (after) {
+            parts.push(
+              segment.isBold ?
+                <strong key={`bold-after-${segIndex}`} className="text-[#225BBA]">{after}</strong> :
+                <span key={`after-${segIndex}`}>{after}</span>
+            )
+          }
+          
+          processed = true
+          break
+        }
+      }
+      
+      // 如果没有可点击关键词,直接渲染
+      if (!processed) {
+        parts.push(
+          segment.isBold ?
+            <strong key={`bold-${segIndex}`} className="text-[#225BBA]">{segment.text}</strong> :
+            <span key={`text-${segIndex}`}>{segment.text}</span>
+        )
+      }
+    })
+    
+    return <>{parts}</>
   }
 
   const containerVariants = {
