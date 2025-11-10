@@ -77,7 +77,8 @@ export default function FloatingTerminal() {
     } else {
       console.log('⏭️ 命令已流式输出过,跳过')
     }
-  }, [state.commands, state.isOpen, currentStreamingId, terminalRef])
+    // 注意: 不要把currentStreamingId加入依赖数组,否则会导致定时器被立即清理
+  }, [state.commands, state.isOpen, terminalRef])
 
   if (!state.isOpen) return null
 
