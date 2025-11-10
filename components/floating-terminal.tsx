@@ -12,7 +12,8 @@ export default function FloatingTerminal() {
 
   // 流式输出动画
   useEffect(() => {
-    if (state.commands.length === 0) return
+    // 必须在终端打开时才执行
+    if (!state.isOpen || state.commands.length === 0) return
 
     const latestCommand = state.commands[state.commands.length - 1]
     
@@ -49,7 +50,7 @@ export default function FloatingTerminal() {
 
       return () => clearInterval(streamInterval)
     }
-  }, [state.commands, currentStreamingId, terminalRef])
+  }, [state.commands, state.isOpen, currentStreamingId, terminalRef])
 
   if (!state.isOpen) return null
 

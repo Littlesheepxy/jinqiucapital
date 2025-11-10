@@ -101,16 +101,6 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
   const terminalRef = useRef<HTMLDivElement>(null)
 
   const executeCommand = (keyword: string, module: string) => {
-    // 打开终端(如果未打开)
-    if (!state.isOpen) {
-      dispatch({ type: "TOGGLE_TERMINAL" })
-    }
-    
-    // 展开终端(如果最小化)
-    if (state.isMinimized) {
-      dispatch({ type: "MAXIMIZE_TERMINAL" })
-    }
-
     // 导入命令数据
     import("@/lib/terminal-commands").then(({ terminalCommands }) => {
       const commandData = terminalCommands[module]?.[keyword]
@@ -118,6 +108,16 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
       if (!commandData) {
         console.warn(`Command not found: ${module} -> ${keyword}`)
         return
+      }
+
+      // 立即打开终端(如果未打开)
+      if (!state.isOpen) {
+        dispatch({ type: "TOGGLE_TERMINAL" })
+      }
+      
+      // 立即展开终端(如果最小化)
+      if (state.isMinimized) {
+        dispatch({ type: "MAXIMIZE_TERMINAL" })
       }
 
       dispatch({ type: "START_EXECUTION" })
@@ -143,7 +143,7 @@ export function TerminalProvider({ children }: { children: React.ReactNode }) {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight
           }
         }, 100)
-      }, 500)
+      }, 300)
     })
   }
 
