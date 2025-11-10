@@ -11,12 +11,14 @@ import ProjectsModules from "@/components/projects-modules"
 import LibrarySystem from "@/components/library-system"
 import AgentInterface from "@/components/agent-interface"
 import FloatingTerminal from "@/components/floating-terminal"
+import MarkdownView from "@/components/markdown-view"
 import { TerminalProvider } from "@/context/terminal-context"
 import { FileText, Zap, Users, Briefcase, BookOpen, Mail } from "lucide-react"
 
 export default function Page() {
   const [isDark, setIsDark] = useState(false)
   const [hasInteracted, setHasInteracted] = useState(false)
+  const [isMarkdownView, setIsMarkdownView] = useState(false)
 
   useEffect(() => {
     if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -58,7 +60,18 @@ export default function Page() {
 
   return (
     <TerminalProvider>
-      <Navigation isDark={isDark} setIsDark={setIsDark} />
+      <Navigation 
+        isDark={isDark} 
+        setIsDark={setIsDark} 
+        isMarkdownView={isMarkdownView}
+        onToggleView={() => setIsMarkdownView(!isMarkdownView)}
+      />
+      
+      {/* Markdown视图 */}
+      {isMarkdownView ? (
+        <MarkdownView />
+      ) : (
+        <>
       <main className="min-h-screen bg-background text-foreground">
         {/* Hero Agent Section */}
         <HeroAgent onStartClick={() => setHasInteracted(true)} />
@@ -181,6 +194,8 @@ export default function Page() {
       
       {/* Floating Terminal */}
       <FloatingTerminal />
+      </>
+      )}
     </TerminalProvider>
   )
 }
