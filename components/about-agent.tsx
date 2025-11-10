@@ -164,11 +164,65 @@ export default function AboutAgent() {
     },
   }
 
+  const statsVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.15,
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    })
+  }
+
   return (
     <section id="about" className="scroll-mt-20 mb-12" ref={ref}>
-      <h2 className="text-2xl font-bold mb-8 text-foreground font-mono">
+      <motion.h2 
+        className="text-2xl font-bold mb-8 text-foreground font-mono"
+        initial={{ opacity: 0, x: -20 }}
+        animate={isInView ? { opacity: 1, x: 0 } : {}}
+        transition={{ duration: 0.5 }}
+      >
         <span className="text-[#225BBA]">#</span> 关于锦秋
-      </h2>
+      </motion.h2>
+
+      {/* Stats Section with Animation */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {stats.map((stat, index) => (
+          <motion.div
+            key={index}
+            custom={index}
+            variants={statsVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            whileHover={{ 
+              scale: 1.05,
+              borderColor: "#225BBA",
+              boxShadow: "0 10px 25px rgba(34, 91, 186, 0.1)"
+            }}
+            className="border-2 border-slate-200 dark:border-slate-700 rounded-lg p-6 bg-white dark:bg-slate-900 text-center transition-colors cursor-pointer"
+          >
+            <motion.div 
+              className="text-3xl font-bold text-[#225BBA] mb-2 font-mono"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={isInView ? { scale: 1, opacity: 1 } : {}}
+              transition={{ delay: index * 0.15 + 0.3, duration: 0.5, ease: "backOut" }}
+            >
+              {stat.num}
+            </motion.div>
+            <motion.div 
+              className="text-sm text-slate-600 dark:text-slate-400"
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ delay: index * 0.15 + 0.5 }}
+            >
+              {stat.label}
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* CLI Style Q&A */}
       <motion.div

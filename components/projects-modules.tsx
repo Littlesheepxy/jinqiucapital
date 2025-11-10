@@ -102,35 +102,57 @@ export default function ProjectsModules() {
           <motion.div
             key={index}
             variants={itemVariants}
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: "0 8px 20px rgba(34, 91, 186, 0.15)",
+              transition: { duration: 0.3 }
+            }}
             className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900 hover:border-[#225BBA] transition-colors"
           >
             {/* Module Header - Clickable */}
-            <button
+            <motion.button
               onClick={() => toggleExpand(index)}
               className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              whileTap={{ scale: 0.98 }}
             >
               <div className="flex items-center gap-4 flex-1">
-                {/* Icon */}
-                <span className="text-2xl">{project.brand.icon}</span>
+                {/* Icon with Bounce */}
+                <motion.span 
+                  className="text-2xl"
+                  whileHover={{ 
+                    scale: 1.2,
+                    rotate: [0, -10, 10, -10, 0],
+                    transition: { duration: 0.5 }
+                  }}
+                >
+                  {project.brand.icon}
+                </motion.span>
 
                 {/* Module Info */}
                 <div className="flex-1">
                   <div className="font-mono text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    <span className="text-[#225BBA]">→</span> {project.name}
+                    <motion.span 
+                      className="text-[#225BBA]"
+                      animate={{ x: [0, 3, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                    >
+                      →
+                    </motion.span>{" "}
+                    {project.name}
                     <span className="text-slate-400 dark:text-slate-600 ml-2">/ {project.nameEn}</span>
                   </div>
                   <p className="text-sm text-slate-700 dark:text-slate-300">{project.summary}</p>
                 </div>
               </div>
 
-              {/* Expand Icon */}
+              {/* Expand Icon with Rotation */}
               <motion.div
                 animate={{ rotate: expandedIndex === index ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 <ChevronDown size={20} className="text-slate-400" />
               </motion.div>
-            </button>
+            </motion.button>
 
             {/* Expanded Details */}
             <AnimatePresence>
