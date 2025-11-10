@@ -24,13 +24,13 @@ export default function AboutAgent() {
       anchor: "identity",
     },
     {
-      question: "how we partner?",
+      question: "how do we partner?",
       answer:
         "我们始终与创始人**并肩同行**——不仅提供资金，更带来深度**产业洞察**与**实践经验**；不仅见证旅程，更参与每一次对新问题的**探索与定义**。",
       anchor: "partnership",
     },
     {
-      question: "what we believe?",
+      question: "what do we believe?",
       answer:
         "我们以**快决策**捕捉创新窗口，以**长期陪伴**验证复利价值，以**增持投入**表达投资信念。锦秋相信，在被智能重构的时代，我们投资的不只是公司，而是推动世界向前的**勇气与想象力**；在不确定的时代，坚持做**最早理解变化的人**，做**最晚放弃信念的人**。",
       anchor: "belief",
