@@ -88,23 +88,40 @@ export default function MarkdownView() {
         {/* 团队 */}
         <section className="mb-12 prose prose-slate dark:prose-invert max-w-none">
           <h2 className="text-2xl font-bold mb-6">团队</h2>
-          <div className="space-y-6">
+          
+          <div className="space-y-8">
             <div>
-              <h3 className="text-lg font-semibold mb-2">张三</h3>
-              <p className="text-muted-foreground text-sm mb-2">创始合伙人</p>
-              <p className="text-sm">20年投资经验，专注AI领域早期投资</p>
+              <h3 className="text-lg font-semibold mb-3">管理团队</h3>
+              <ul className="space-y-1">
+                <li><strong>杨洁</strong> - Founding Partner</li>
+                <li><strong>臧天宇</strong> - Partner</li>
+                <li><strong>郑晓超</strong> - Partner</li>
+              </ul>
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-2">李四</h3>
-              <p className="text-muted-foreground text-sm mb-2">投资合伙人</p>
-              <p className="text-sm">前知名科技公司高管，深耕具身智能领域</p>
+              <h3 className="text-lg font-semibold mb-3">投资团队</h3>
+              <ul className="space-y-1">
+                <li><strong>杨秉慧</strong> - Investor</li>
+                <li><strong>石亚琼</strong> - Investor</li>
+                <li><strong>周欣</strong> - Investor</li>
+                <li><strong>龙杰</strong> - Investor</li>
+                <li><strong>廖智媛</strong> - Investor</li>
+                <li><strong>施立成</strong> - Investor</li>
+                <li><strong>谢昊翔</strong> - Investor</li>
+              </ul>
             </div>
             
             <div>
-              <h3 className="text-lg font-semibold mb-2">王五</h3>
-              <p className="text-muted-foreground text-sm mb-2">投资总监</p>
-              <p className="text-sm">专注算力基础设施和模型技术投资</p>
+              <h3 className="text-lg font-semibold mb-3">职能团队</h3>
+              <ul className="space-y-1">
+                <li><strong>李轻舟</strong> - Financial Manager</li>
+                <li><strong>乔众龙</strong> - Financial Manager</li>
+                <li><strong>谭逸</strong> - Legal Manager</li>
+                <li><strong>张旭</strong> - HR Manager</li>
+                <li><strong>肖杨</strong> - Product Manager</li>
+                <li><strong>马梦真</strong> - Branding Manager</li>
+              </ul>
             </div>
           </div>
         </section>
@@ -115,33 +132,37 @@ export default function MarkdownView() {
           <p className="mb-4">锦秋基金已投资 60+ 家优秀企业，覆盖AI应用、具身智能、算力基础等多个领域。</p>
           
           <h3 className="text-lg font-semibold mb-3 mt-6">AI 应用</h3>
+          <p className="text-sm text-muted-foreground mb-2">从底层技术到应用场景的全面布局</p>
           <ul>
-            <li>智能办公助手</li>
-            <li>AI设计工具</li>
-            <li>智能客服平台</li>
-            <li>AI内容生成</li>
+            <li>智能办公与协作工具</li>
+            <li>AI驱动的设计与创作平台</li>
+            <li>垂直领域智能化解决方案</li>
+            <li>AI内容生成与分析</li>
           </ul>
 
           <h3 className="text-lg font-semibold mb-3 mt-6">具身智能</h3>
+          <p className="text-sm text-muted-foreground mb-2">投资智能机器人与自动化领域</p>
           <ul>
-            <li>人形机器人</li>
-            <li>工业自动化</li>
-            <li>自动驾驶</li>
-            <li>智能配送</li>
+            <li>人形机器人与服务机器人</li>
+            <li>工业自动化与智能制造</li>
+            <li>自动驾驶与智能交通</li>
+            <li>智能物流与配送系统</li>
           </ul>
 
           <h3 className="text-lg font-semibold mb-3 mt-6">算力基础</h3>
+          <p className="text-sm text-muted-foreground mb-2">支持AI发展的算力与基础设施</p>
           <ul>
-            <li>AI芯片</li>
-            <li>云计算平台</li>
-            <li>边缘计算</li>
+            <li>AI芯片(GPU/NPU/ASIC)</li>
+            <li>云计算与边缘计算平台</li>
+            <li>算力调度与优化</li>
           </ul>
 
           <h3 className="text-lg font-semibold mb-3 mt-6">模型基础</h3>
+          <p className="text-sm text-muted-foreground mb-2">大模型与AI框架领域投资</p>
           <ul>
-            <li>大语言模型</li>
+            <li>大语言模型(LLM)</li>
             <li>多模态模型</li>
-            <li>AI框架</li>
+            <li>AI开发框架与工具链</li>
           </ul>
         </section>
 
