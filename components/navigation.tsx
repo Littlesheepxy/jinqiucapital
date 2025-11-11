@@ -1,63 +1,42 @@
 "use client"
 
-import { Moon, Sun, Terminal, FileText } from "lucide-react"
-import Image from "next/image"
-import { useTerminal } from "@/context/terminal-context"
+import { Moon, Sun, Languages } from "lucide-react"
+import { useLanguage } from "@/context/language-context"
+import { translations } from "@/lib/translations"
 
 interface NavigationProps {
   isDark: boolean
   setIsDark: (v: boolean) => void
-  isMarkdownView?: boolean
-  onToggleView?: () => void
 }
 
-export default function Navigation({ isDark, setIsDark, isMarkdownView = false, onToggleView }: NavigationProps) {
-  const terminalContext = useTerminal()
+export default function Navigation({ isDark, setIsDark }: NavigationProps) {
+  const { language, setLanguage } = useLanguage()
+  const t = translations[language]
   
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="w-full flex items-center justify-between">
         <div className="px-4 lg:px-8 py-4 flex items-center">
-          {/* Logo */}
-          <a href="/" className="flex items-center">
+          <a href="/" className="flex items-center gap-3">
             <img 
               src="/jinqiu-logo.png" 
-              alt="锦秋基金" 
+              alt={t.nav.brandName}
               className="h-10"
             />
+            <span className="text-xl font-bold text-foreground">{t.nav.brandName}</span>
           </a>
         </div>
         
-        {/* Right Controls - Markdown视图 + 终端 + 深色模式 */}
         <div className="px-4 lg:px-8 py-4 flex items-center gap-2">
-          {/* Markdown View Toggle */}
-          {onToggleView && (
-            <button
-              onClick={onToggleView}
-              className="p-2 hover:bg-muted rounded transition-colors text-foreground"
-              aria-label={isMarkdownView ? "切换到交互模式" : "切换到Markdown模式"}
-              title={isMarkdownView ? "交互模式" : "Markdown模式"}
-            >
-              <FileText size={18} />
-            </button>
-          )}
-          
-          {/* Terminal Toggle - 只在交互模式显示 */}
-          {!isMarkdownView && terminalContext && (
-            <button
-              onClick={terminalContext.toggleTerminal}
-              className="p-2 hover:bg-muted rounded transition-colors text-foreground relative"
-              aria-label="切换终端"
-            >
-              <Terminal size={18} />
-              {/* 未读命令提示气泡 */}
-              {!terminalContext.state.isOpen && terminalContext.state.commands.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#225BBA] rounded-full text-[10px] text-white flex items-center justify-center font-bold">
-                  {terminalContext.state.commands.length}
-                </span>
-              )}
-            </button>
-          )}
+          {/* Language Toggle */}
+          <button
+            onClick={() => setLanguage(language === "zh" ? "en" : "zh")}
+            className="px-3 py-1.5 hover:bg-muted rounded transition-colors text-foreground flex items-center gap-1.5 text-sm font-medium"
+            aria-label="切换语言"
+          >
+            <Languages size={16} />
+            <span>{language === "zh" ? "EN" : "中"}</span>
+          </button>
           
           {/* Dark Mode Toggle */}
           <button
