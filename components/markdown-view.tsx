@@ -210,8 +210,8 @@ export default function MarkdownView() {
             如果你是创业者，或对锦秋基金感兴趣，欢迎联系我们:
           </p>
           <p>
-            <a href="mailto:hello@jinqiu.vc" className="text-[#225BBA] hover:underline">
-              hello@jinqiu.vc
+            <a href="mailto:hello@jinqiucapital.com" className="text-[#225BBA] hover:underline">
+              hello@jinqiucapital.com
             </a>
           </p>
         </section>
