@@ -62,14 +62,22 @@ export default function AdminPage() {
         })
       })
 
+      const result = await response.json()
+
       if (response.ok) {
-        setMessage("✓ 保存成功！")
+        const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
+        setMessage(`✓ 保存成功到 ${saveMethod}！`)
         setTimeout(() => setMessage(""), 3000)
+        
+        // 等待一小段时间让 Edge Config 传播，然后重新加载验证
+        setTimeout(() => loadData(), 1000)
       } else {
-        setMessage("保存失败")
+        const errorDetails = result.details ? `: ${result.details}` : ''
+        setMessage(`保存失败${errorDetails}`)
       }
     } catch (error) {
-      setMessage("保存失败")
+      console.error('Save error:', error)
+      setMessage(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
     } finally {
       setSaving(false)
     }
