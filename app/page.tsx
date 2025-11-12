@@ -84,7 +84,7 @@ export default function Page() {
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
         {lang === "zh" ? "团队" : "People"}
       </h2>
-      <ul style={{ listStyle: "none", padding: 0, marginBottom: "40px" }}>
+      <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
         {teamData.map((member, i) => (
           <li key={i} style={{ marginBottom: "8px" }}>
             {member.link ? (
