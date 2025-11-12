@@ -14,17 +14,14 @@ export default function Page() {
       setLanguage("en")
     }
 
-    // Load content data
-    fetch("/data/content.json")
+    // Load content and team data from API (reads from Edge Config in production)
+    fetch("/api/content")
       .then((res) => res.json())
-      .then((data) => setContentData(data))
-      .catch((err) => console.error("Failed to load content:", err))
-
-    // Load team data
-    fetch("/data/team.json")
-      .then((res) => res.json())
-      .then((data) => setTeamData(data))
-      .catch((err) => console.error("Failed to load team data:", err))
+      .then((data) => {
+        setContentData(data.content)
+        setTeamData(data.team)
+      })
+      .catch((err) => console.error("Failed to load data:", err))
   }, [])
 
   const toggleLanguage = () => {
