@@ -1,110 +1,197 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Navigation from "@/components/navigation"
-import Footer from "@/components/footer"
-import AboutAgent from "@/components/about-agent"
-import TeamAgent from "@/components/team-agent"
-import PortfolioQuery from "@/components/portfolio-query"
-import ProjectsModules from "@/components/projects-modules"
-import LibrarySystem from "@/components/library-system"
-import { LanguageProvider, useLanguage } from "@/context/language-context"
-import { translations } from "@/lib/translations"
-import { FileText, Mail } from "lucide-react"
-
-function PageContent({ isDark, setIsDark }: { isDark: boolean; setIsDark: (v: boolean) => void }) {
-  const { language } = useLanguage()
-  const t = translations[language]
-
-  return (
-    <>
-      <Navigation 
-        isDark={isDark} 
-        setIsDark={setIsDark}
-      />
-      
-      <main className="min-h-screen bg-background text-foreground pt-20">
-        <div className="w-full py-8 md:py-12 px-4 lg:px-8">
-          <div className="border border-border rounded-lg bg-card p-8 md:p-10 lg:p-12">
-            <div className="flex items-center gap-4 pb-4 mb-8 border-b border-border">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <FileText size={16} />
-                <span>{t.header.readme}</span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <a 
-                  href={language === "zh" 
-                    ? "https://creativecommons.org/licenses/by-nd/4.0/deed.zh-hans"
-                    : "https://creativecommons.org/licenses/by-nd/4.0/"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                  title={language === "zh" 
-                    ? "内容采用知识共享署名-禁止演绎 4.0 国际许可协议"
-                    : "Content licensed under Creative Commons Attribution-NoDerivatives 4.0 International License"}
-                >
-                  {t.header.license}
-                </a>
-              </div>
-            </div>
-
-            <AboutAgent />
-            <div className="border-t border-border my-10" />
-
-            <TeamAgent />
-            <div className="border-t border-border my-10" />
-
-            <PortfolioQuery />
-            <div className="border-t border-border my-10" />
-
-            <ProjectsModules />
-            <div className="border-t border-border my-10" />
-
-            <LibrarySystem />
-            <div className="border-t border-border my-10" />
-
-            <section id="contact" className="mb-2 scroll-mt-20">
-              <h2 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-2">
-                <Mail size={24} />
-                {t.contact.title}
-              </h2>
-              <p className="text-sm text-foreground mb-5">{t.contact.description}</p>
-              <a
-                href="mailto:contact@jinqiucapital.com"
-                className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:opacity-90 transition-opacity"
-              >
-                → {t.contact.sendEmail}
-              </a>
-            </section>
-          </div>
-        </div>
-      </main>
-      <Footer />
-    </>
-  )
-}
 
 export default function Page() {
-  const [isDark, setIsDark] = useState(false)
+  const [language, setLanguage] = useState<"zh" | "en">("zh")
+  const [contentData, setContentData] = useState<any>(null)
+  const [teamData, setTeamData] = useState<any[]>([])
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setIsDark(true)
+    // Detect browser language
+    const browserLanguage = navigator.language.toLowerCase()
+    if (browserLanguage.includes("en")) {
+      setLanguage("en")
     }
+
+    // Load content data
+    fetch("/data/content.json")
+      .then((res) => res.json())
+      .then((data) => setContentData(data))
+      .catch((err) => console.error("Failed to load content:", err))
+
+    // Load team data
+    fetch("/data/team.json")
+      .then((res) => res.json())
+      .then((data) => setTeamData(data))
+      .catch((err) => console.error("Failed to load team data:", err))
   }, [])
 
-  useEffect(() => {
-    const html = document.documentElement
-    if (isDark) {
-      html.classList.add("dark")
-    } else {
-      html.classList.remove("dark")
-    }
-  }, [isDark])
+  const toggleLanguage = () => {
+    setLanguage(language === "zh" ? "en" : "zh")
+  }
+
+  if (!contentData) {
+    return <div style={{ padding: "40px", textAlign: "center" }}>加载中...</div>
+  }
+
+  const lang = language
+  const brandName = contentData.settings.brandName[lang]
 
   return (
-    <LanguageProvider>
-      <PageContent isDark={isDark} setIsDark={setIsDark} />
-    </LanguageProvider>
+    <div style={{ 
+      maxWidth: "800px", 
+      margin: "0 auto", 
+      padding: "40px 20px",
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      lineHeight: "1.6",
+      color: "#000"
+    }}>
+      {/* Header */}
+      <div style={{ marginBottom: "40px", display: "flex", alignItems: "center", gap: "16px" }}>
+        <img 
+          src="/jinqiu-logo.png" 
+          alt={brandName}
+          style={{ height: "40px" }}
+        />
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0, flex: 1 }}>
+          {brandName}
+        </h1>
+        <button 
+          onClick={toggleLanguage}
+          style={{
+            background: "none",
+            border: "1px solid #ccc",
+            padding: "4px 12px",
+            cursor: "pointer",
+            fontSize: "14px"
+          }}
+        >
+          {lang === "zh" ? "EN" : "中"}
+        </button>
+      </div>
+
+      {/* Intro */}
+      <div style={{ marginBottom: "50px" }}>
+        {contentData.about.paragraphs.map((para: any, i: number) => (
+          <p key={i} style={{ marginBottom: "16px" }}>{para[lang]}</p>
+        ))}
+      </div>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Team */}
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+        {lang === "zh" ? "团队" : "People"}
+      </h2>
+      <ul style={{ listStyle: "none", padding: 0, marginBottom: "40px" }}>
+        {teamData.map((member, i) => (
+          <li key={i} style={{ marginBottom: "8px" }}>
+            {member.link ? (
+              <a
+                href={member.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+              >
+                {member.name}
+              </a>
+            ) : (
+              <strong>{member.name}</strong>
+            )}
+            {lang === "zh" && member.title_zh && ` (${member.title_zh})`}
+            {lang === "en" && member.title && ` (${member.title})`}
+          </li>
+        ))}
+        <li style={{ marginTop: "16px" }}>
+          <a 
+            href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+          >
+            {lang === "zh" ? "加入我们" : "Join Us"}
+          </a>
+        </li>
+      </ul>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Portfolio */}
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+        {contentData.portfolio.title[lang]}
+      </h2>
+      <p style={{ marginBottom: "40px" }}>{contentData.portfolio.description[lang]}</p>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Projects */}
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+        {lang === "zh" ? "项目矩阵" : "Projects"}
+      </h2>
+      <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
+        {contentData.projects.map((project: any, i: number) => (
+          <li key={i} style={{ marginBottom: "8px" }}>
+            <a 
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+            >
+              {project.name[lang]}
+            </a>
+            {": " + project.description[lang]}
+          </li>
+        ))}
+      </ul>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Research & Events */}
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+        {lang === "zh" ? "研究与活动" : "Research & Events"}
+      </h2>
+      <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
+        {contentData.research.map((item: any, i: number) => (
+          <li key={i} style={{ marginBottom: "8px" }}>
+            {item.link ? (
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+              >
+                {typeof item.name === "string" ? item.name : item.name[lang]}
+              </a>
+            ) : (
+              <strong>{typeof item.name === "string" ? item.name : item.name[lang]}</strong>
+            )}
+            : {item.description[lang]}
+          </li>
+        ))}
+      </ul>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Contact */}
+      <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
+        {lang === "zh" ? "联系方式" : "Contact"}
+      </h2>
+      <p style={{ marginBottom: "40px" }}>
+        <a 
+          href="mailto:contact@jinqiucapital.com"
+          style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+        >
+          contact@jinqiucapital.com
+        </a>
+      </p>
+
+      <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
+
+      {/* Footer */}
+      <div style={{ fontSize: "14px", color: "#666", marginTop: "60px" }}>
+        <p>{lang === "zh" ? "© 2025 锦秋基金" : "© 2025 Jinqiu Capital"}</p>
+      </div>
+    </div>
   )
 }
