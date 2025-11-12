@@ -82,7 +82,7 @@ export default function Page() {
 
       {/* Team */}
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
-        {lang === "zh" ? "团队" : "People"}
+        Team
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
         {teamData.map((member, i) => (
@@ -99,8 +99,7 @@ export default function Page() {
             ) : (
               <strong>{member.name}</strong>
             )}
-            {lang === "zh" && member.title_zh && ` (${member.title_zh})`}
-            {lang === "en" && member.title && ` (${member.title})`}
+            {member.title && ` | ${member.title}`}
           </li>
         ))}
         <li style={{ marginTop: "16px" }}>
@@ -119,7 +118,7 @@ export default function Page() {
 
       {/* Portfolio */}
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
-        {contentData.portfolio.title[lang]}
+        Portfolio
       </h2>
       <p style={{ marginBottom: "40px" }}>{contentData.portfolio.description[lang]}</p>
 
@@ -127,7 +126,7 @@ export default function Page() {
 
       {/* Projects */}
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
-        {lang === "zh" ? "项目矩阵" : "Projects"}
+        Projects
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
         {contentData.projects.map((project: any, i: number) => (
@@ -147,9 +146,9 @@ export default function Page() {
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
 
-      {/* Research & Events */}
+      {/* Library */}
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
-        {lang === "zh" ? "研究与活动" : "Research & Events"}
+        Library
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
         {contentData.research.map((item: any, i: number) => (
@@ -175,7 +174,7 @@ export default function Page() {
 
       {/* Contact */}
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
-        {lang === "zh" ? "联系方式" : "Contact"}
+        Contact
       </h2>
       <p style={{ marginBottom: "40px" }}>
         <a 
