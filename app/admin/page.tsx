@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -65,16 +66,31 @@ export default function AdminPage() {
 
       if (response.ok) {
         const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
-        setMessage(`✓ 保存成功到 ${saveMethod}！`)
-        setTimeout(() => setMessage(""), 3000)
-        setTimeout(() => loadData(), 1000)
+        setMessage(`✓ 保存成功到 ${saveMethod}！正在验证...`)
+        
+        // Edge Config 需要时间传播，等待更长时间
+        if (result.edgeConfigUpdated) {
+          // 等待 3 秒让 Edge Config 传播
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          
+          // 重新加载验证
+          await loadData()
+          setMessage(`✓ 保存成功并已验证！`)
+        } else {
+          // 本地保存，立即重新加载
+          await loadData()
+          setMessage(`✓ 保存成功！`)
+        }
+        
+        setTimeout(() => setMessage(""), 5000)
       } else {
         const errorDetails = result.details ? `: ${result.details}` : ''
-        setMessage(`保存失败${errorDetails}`)
+        setMessage(`❌ 保存失败${errorDetails}`)
+        console.error('Save failed:', result)
       }
     } catch (error) {
       console.error('Save error:', error)
-      setMessage(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      setMessage(`❌ 保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
     } finally {
       setSaving(false)
     }
@@ -322,57 +338,36 @@ export default function AdminPage() {
         {activeTab === "intro" && (
           <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px" }}>
             <h2 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "20px" }}>
-              品牌介绍（支持 Markdown 格式）
+              品牌介绍（富文本编辑）
             </h2>
             <div style={{ marginBottom: "24px" }}>
               <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
                 中文介绍
               </label>
-              <textarea
+              <RichTextEditor
                 value={contentData.about.intro.zh}
-                onChange={(e) => {
+                onChange={(value) => {
                   const updated = { ...contentData }
-                  updated.about.intro.zh = e.target.value
+                  updated.about.intro.zh = value
                   setContentData(updated)
                 }}
-                style={{
-                  width: "100%",
-                  minHeight: "200px",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  fontFamily: "monospace",
-                  lineHeight: "1.6"
-                }}
-                placeholder="支持 **粗体**、换行等 Markdown 格式"
+                placeholder="输入品牌介绍（中文）..."
+                minHeight="250px"
               />
-              <div style={{ marginTop: "8px", fontSize: "12px", color: "#666" }}>
-                提示：使用 **文本** 来加粗，直接按回车换行
-              </div>
             </div>
             <div>
               <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
                 英文介绍
               </label>
-              <textarea
+              <RichTextEditor
                 value={contentData.about.intro.en}
-                onChange={(e) => {
+                onChange={(value) => {
                   const updated = { ...contentData }
-                  updated.about.intro.en = e.target.value
+                  updated.about.intro.en = value
                   setContentData(updated)
                 }}
-                style={{
-                  width: "100%",
-                  minHeight: "200px",
-                  padding: "12px",
-                  border: "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  fontFamily: "monospace",
-                  lineHeight: "1.6"
-                }}
-                placeholder="Support **bold** and line breaks with Markdown"
+                placeholder="Enter brand introduction (English)..."
+                minHeight="250px"
               />
             </div>
           </div>

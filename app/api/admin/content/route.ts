@@ -63,8 +63,14 @@ async function updateEdgeConfig(content: any, team: any) {
   const vercelToken = process.env.VERCEL_API_TOKEN
   
   if (!edgeConfigId || !vercelToken) {
+    console.error('Missing Edge Config credentials:', {
+      hasEdgeConfigId: !!edgeConfigId,
+      hasVercelToken: !!vercelToken
+    })
     throw new Error('Edge Config credentials not configured')
   }
+
+  console.log('Updating Edge Config:', edgeConfigId)
 
   const response = await fetch(
     `https://api.vercel.com/v1/edge-config/${edgeConfigId}/items`,
@@ -84,8 +90,18 @@ async function updateEdgeConfig(content: any, team: any) {
   )
 
   if (!response.ok) {
-    throw new Error('Failed to update Edge Config')
+    const errorText = await response.text()
+    console.error('Edge Config update failed:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText
+    })
+    throw new Error(`Failed to update Edge Config: ${response.status} ${errorText}`)
   }
+
+  const result = await response.json()
+  console.log('Edge Config update result:', result)
+  return result
 }
 
 // POST: 保存内容数据
