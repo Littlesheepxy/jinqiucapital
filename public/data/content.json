@@ -6,99 +6,90 @@
     }
   },
   "about": {
-    "title": {
-      "zh": "关于锦秋",
-      "en": "About Jinqiu"
+    "intro": {
+      "zh": "作为一家 12 年期的 AI-Native 基金，我们长期关注 AI 应用、具身智能、算力基础与模型基础等前沿方向，支持那些用智能推动人类创造力延伸与效率重塑的创业者。\n\n我们始终与创始人并肩同行——不仅提供资金，更带来深度产业洞察与实践经验；不仅见证旅程，更参与每一次对新问题的探索与定义。\n\n我们以快决策捕捉创新窗口，以长期陪伴验证复利价值，以增持投入表达投资信念。锦秋相信，在被智能重构的时代，我们投资的不只是公司，而是推动世界向前的勇气与想象力；在不确定的时代，坚持做最早理解变化的人，做最晚放弃信念的人。\n\n**锦秋基金，持续与最具方向感与创造力的创业者一起，率先抵达未来。**",
+      "en": "As a **12-year AI-Native fund**, Jinqiu Capital focuses on cutting-edge areas such as AI applications, embodied intelligence, computing infrastructure, and model foundations. We support entrepreneurs who leverage intelligence to extend human creativity and reshape efficiency.\n\nWe always stand alongside founders—providing not just capital, but also deep industry insights and practical experience; not just witnessing the journey, but participating in every exploration and definition of new problems.\n\nWe capture innovation windows with rapid decision-making, validate compounding value through long-term companionship, and express investment conviction through increased commitment. Jinqiu believes that in an era reshaped by intelligence, we invest not just in companies, but in the courage and imagination that drive the world forward; in uncertain times, we strive to be the first to understand change and the last to abandon conviction.\n\n**Jinqiu Capital continues to partner with the most visionary and creative entrepreneurs to arrive at the future first.**"
+    }
+  },
+  "portfolio": {
+    "desc": {
+      "zh": "我们投资了多个前沿 AI 领域的创新公司（待公布）。",
+      "en": "We have invested in innovative companies across various cutting-edge AI fields (to be announced)."
     },
-    "paragraphs": [
+    "items": []
+  },
+  "projects": {
+    "list": [
       {
-        "zh": "作为一家 12 年期的 AI-Native 基金，我们长期关注 AI 应用、具身智能、算力基础与模型基础等前沿方向，支持那些用智能推动人类创造力延伸与效率重塑的创业者。",
-        "en": "As a 12-year AI-Native fund, Jinqiu Capital focuses on cutting-edge areas such as AI applications, embodied intelligence, computing infrastructure, and model foundations. We support entrepreneurs who leverage intelligence to extend human creativity and reshape efficiency."
-      },
-      {
-        "zh": "我们始终与创始人并肩同行——不仅提供资金，更带来深度产业洞察与实践经验；不仅见证旅程，更参与每一次对新问题的探索与定义。",
-        "en": "We always stand alongside founders—providing not just capital, but also deep industry insights and practical experience; not just witnessing the journey, but participating in every exploration and definition of new problems."
-      },
-      {
-        "zh": "我们以快决策捕捉创新窗口，以长期陪伴验证复利价值，以增持投入表达投资信念。锦秋相信，在被智能重构的时代，我们投资的不只是公司，而是推动世界向前的勇气与想象力；在不确定的时代，坚持做最早理解变化的人，做最晚放弃信念的人。",
-        "en": "We capture innovation windows with rapid decision-making, validate compounding value through long-term companionship, and express investment conviction through increased commitment. Jinqiu believes that in an era reshaped by intelligence, we invest not just in companies, but in the courage and imagination that drive the world forward; in uncertain times, we strive to be the first to understand change and the last to abandon conviction."
-      },
-      {
-        "zh": "锦秋基金，持续与最具方向感与创造力的创业者一起，率先抵达未来。",
-        "en": "Jinqiu Capital continues to partner with the most visionary and creative entrepreneurs to arrive at the future first."
+        "name": {
+          "zh": "Soli 种子计划",
+          "en": "Soli Seed Program"
+        },
+        "desc": {
+          "zh": "面向 AI 创业者的早期支持计划",
+          "en": "Early-stage support program for AI entrepreneurs"
+        },
+        "link": "https://soli.jinqiucapital.com"
       }
     ]
   },
-  "portfolio": {
-    "title": {
-      "zh": "投资组合",
-      "en": "Portfolio"
-    },
-    "description": {
-      "zh": "我们投资了多个前沿 AI 领域的创新公司（待公布）。",
-      "en": "We have invested in innovative companies across various cutting-edge AI fields (to be announced)."
-    }
-  },
-  "projects": [
-    {
-      "name": {
-        "zh": "Soli 种子计划",
-        "en": "Soli Seed Program"
+  "research": {
+    "list": [
+      {
+        "name": {
+          "zh": "Jinqiu Select",
+          "en": "Jinqiu Select"
+        },
+        "desc": {
+          "zh": "AI报告解读、行业研究分析",
+          "en": "AI report interpretations and industry research"
+        },
+        "link": ""
       },
-      "description": {
-        "zh": "面向 AI 创业者的早期支持计划",
-        "en": "Early-stage support program for AI entrepreneurs"
+      {
+        "name": {
+          "zh": "Jinqiu Scan",
+          "en": "Jinqiu Scan"
+        },
+        "desc": {
+          "zh": "锦秋AI产品测评",
+          "en": "Jinqiu AI product reviews"
+        },
+        "link": ""
       },
-      "link": "https://soli.jinqiucapital.com"
-    }
-  ],
-  "research": [
-    {
-      "name": "Jinqiu Select",
-      "description": {
-        "zh": "AI报告解读、行业研究分析",
-        "en": "AI report interpretations and industry research"
+      {
+        "name": {
+          "zh": "Jinqiu Spotlight",
+          "en": "Jinqiu Spotlight"
+        },
+        "desc": {
+          "zh": "追踪锦秋基金与被投企业的动态",
+          "en": "Tracking Jinqiu Capital and portfolio company updates"
+        },
+        "link": ""
       },
-      "link": ""
-    },
-    {
-      "name": "Jinqiu Scan",
-      "description": {
-        "zh": "锦秋AI产品测评",
-        "en": "Jinqiu AI product reviews"
+      {
+        "name": {
+          "zh": "锦秋小饭桌",
+          "en": "Jinqiu Roundtable"
+        },
+        "desc": {
+          "zh": "为创业者打造的常态化闭门社交活动",
+          "en": "Regular closed-door social events for entrepreneurs"
+        },
+        "link": ""
       },
-      "link": ""
-    },
-    {
-      "name": "Jinqiu Spotlight",
-      "description": {
-        "zh": "追踪锦秋基金与被投企业的动态",
-        "en": "Tracking Jinqiu Capital and portfolio company updates"
-      },
-      "link": ""
-    },
-    {
-      "name": {
-        "zh": "锦秋小饭桌",
-        "en": "Jinqiu Roundtable"
-      },
-      "description": {
-        "zh": "为创业者打造的常态化闭门社交活动",
-        "en": "Regular closed-door social events for entrepreneurs"
-      },
-      "link": ""
-    },
-    {
-      "name": {
-        "zh": "锦秋会",
-        "en": "Jinqiu Summit"
-      },
-      "description": {
-        "zh": "一年一度的锦秋CEO大会",
-        "en": "Annual Jinqiu CEO conference"
-      },
-      "link": ""
-    }
-  ]
+      {
+        "name": {
+          "zh": "锦秋会",
+          "en": "Jinqiu Summit"
+        },
+        "desc": {
+          "zh": "一年一度的锦秋CEO大会",
+          "en": "Annual Jinqiu CEO conference"
+        },
+        "link": ""
+      }
+    ]
+  }
 }
-

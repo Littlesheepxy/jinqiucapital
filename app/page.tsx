@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { SimpleMarkdown } from "@/components/simple-markdown"
 
 export default function Page() {
   const [language, setLanguage] = useState<"zh" | "en">("zh")
@@ -70,9 +71,7 @@ export default function Page() {
 
       {/* Intro */}
       <div style={{ marginBottom: "50px" }}>
-        {contentData.about.paragraphs.map((para: any, i: number) => (
-          <p key={i} style={{ marginBottom: "16px" }}>{para[lang]}</p>
-        ))}
+        <SimpleMarkdown text={contentData.about.intro[lang]} />
       </div>
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
@@ -117,7 +116,27 @@ export default function Page() {
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
         Portfolio
       </h2>
-      <p style={{ marginBottom: "40px" }}>{contentData.portfolio.description[lang]}</p>
+      <p style={{ marginBottom: "16px" }}>{contentData.portfolio.desc[lang]}</p>
+      {contentData.portfolio.items && contentData.portfolio.items.length > 0 && (
+        <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
+          {contentData.portfolio.items.map((item: any, i: number) => (
+            <li key={i} style={{ marginBottom: "8px" }}>
+              {item.link ? (
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+                >
+                  {item.name[lang]}
+                </a>
+              ) : (
+                <strong>{item.name[lang]}</strong>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
 
@@ -126,7 +145,7 @@ export default function Page() {
         Projects
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-        {contentData.projects.map((project: any, i: number) => (
+        {contentData.projects.list.map((project: any, i: number) => (
           <li key={i} style={{ marginBottom: "8px" }}>
             <a 
               href={project.link}
@@ -136,7 +155,7 @@ export default function Page() {
             >
               {project.name[lang]}
             </a>
-            {": " + project.description[lang]}
+            {": " + project.desc[lang]}
           </li>
         ))}
       </ul>
@@ -148,7 +167,7 @@ export default function Page() {
         Library
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-        {contentData.research.map((item: any, i: number) => (
+        {contentData.research.list.map((item: any, i: number) => (
           <li key={i} style={{ marginBottom: "8px" }}>
             {item.link ? (
               <a
@@ -157,12 +176,12 @@ export default function Page() {
                 rel="noopener noreferrer"
                 style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
               >
-                {typeof item.name === "string" ? item.name : item.name[lang]}
+                {item.name[lang]}
               </a>
             ) : (
-              <strong>{typeof item.name === "string" ? item.name : item.name[lang]}</strong>
+              <strong>{item.name[lang]}</strong>
             )}
-            : {item.description[lang]}
+            : {item.desc[lang]}
           </li>
         ))}
       </ul>
