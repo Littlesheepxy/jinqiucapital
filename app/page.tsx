@@ -119,22 +119,71 @@ export default function Page() {
       <p style={{ marginBottom: "16px" }}>{contentData.portfolio.desc[lang]}</p>
       {contentData.portfolio.items && contentData.portfolio.items.length > 0 && (
         <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-          {contentData.portfolio.items.map((item: any, i: number) => (
-            <li key={i} style={{ marginBottom: "8px" }}>
-              {item.link ? (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-                >
-                  {item.name[lang]}
-                </a>
-              ) : (
-                <strong>{item.name[lang]}</strong>
-              )}
-            </li>
-          ))}
+          {contentData.portfolio.items.map((item: any, i: number) => {
+            // 格式化创始人列表
+            const formatFounders = (founders: any[]) => {
+              if (!founders || founders.length === 0) return ""
+              
+              const founderElements = founders.map((founder: any, fIndex: number) => {
+                const name = founder.link ? (
+                  <a
+                    href={founder.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#225BBA", textDecoration: "none" }}
+                  >
+                    {founder.name[lang]}
+                  </a>
+                ) : (
+                  founder.name[lang]
+                )
+                
+                // 中文: 使用顿号和"和"
+                if (lang === "zh") {
+                  if (fIndex === founders.length - 1 && founders.length > 1) {
+                    return <span key={fIndex}>和{name}</span>
+                  } else if (fIndex > 0) {
+                    return <span key={fIndex}>、{name}</span>
+                  }
+                  return <span key={fIndex}>{name}</span>
+                }
+                
+                // 英文: 使用逗号和"and"
+                if (fIndex === founders.length - 1 && founders.length > 1) {
+                  return <span key={fIndex}>, and {name}</span>
+                } else if (fIndex > 0) {
+                  return <span key={fIndex}>, {name}</span>
+                }
+                return <span key={fIndex}>{name}</span>
+              })
+              
+              return founderElements
+            }
+
+            return (
+              <li key={i} style={{ marginBottom: "12px" }}>
+                {item.link ? (
+                  <a
+                    href={item.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+                  >
+                    {item.name[lang]}
+                  </a>
+                ) : (
+                  <strong>{item.name[lang]}</strong>
+                )}
+                {item.founders && item.founders.length > 0 && (
+                  <span style={{ color: "#666" }}>
+                    {lang === "zh" ? ", 由" : ", founded by "}
+                    {formatFounders(item.founders)}
+                    {lang === "zh" ? "创立" : ""}
+                  </span>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 
@@ -169,7 +218,14 @@ export default function Page() {
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
         {contentData.research.list.map((item: any, i: number) => (
           <li key={i} style={{ marginBottom: "8px" }}>
-            {item.link ? (
+            {item.slug ? (
+              <a
+                href={`/library/${item.slug}`}
+                style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+              >
+                {item.name[lang]}
+              </a>
+            ) : item.link ? (
               <a
                 href={item.link}
                 target="_blank"
