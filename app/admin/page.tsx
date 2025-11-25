@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import Confetti from "react-confetti"
+import { useDebouncedCallback } from "use-debounce"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -22,6 +23,9 @@ export default function AdminPage() {
   const [previewArticleIndex, setPreviewArticleIndex] = useState(0)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [autoSaving, setAutoSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const hasUnsavedChanges = useRef(false)
 
   // 加载数据
   const loadData = async () => {
@@ -62,10 +66,14 @@ export default function AdminPage() {
     }
   }
 
-  // 保存数据
-  const handleSave = async () => {
-    setSaving(true)
-    setMessage("")
+  // 实际保存函数
+  const performSave = async (isAutoSave = false) => {
+    if (isAutoSave) {
+      setAutoSaving(true)
+    } else {
+      setSaving(true)
+      setMessage("")
+    }
 
     try {
       const response = await fetch("/api/admin/content", {
@@ -81,28 +89,60 @@ export default function AdminPage() {
       const result = await response.json()
 
       if (response.ok) {
-        const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
-        setMessage(`✓ 保存成功到 ${saveMethod}！`)
+        hasUnsavedChanges.current = false
+        setLastSaved(new Date())
         
-        // 不需要重新加载数据，因为本地状态已经是最新的
-        // 只在Edge Config模式下提示传播延迟
-        if (result.edgeConfigUpdated) {
-          setMessage(`✓ 保存成功到 ${saveMethod}！(注意：Edge Config 更新可能需要几秒钟传播到全球)`)
+        if (!isAutoSave) {
+          const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
+          setMessage(`✓ 保存成功到 ${saveMethod}！`)
+          
+          if (result.edgeConfigUpdated) {
+            setMessage(`✓ 保存成功到 ${saveMethod}！(注意：Edge Config 更新可能需要几秒钟传播到全球)`)
+          }
+          
+          setTimeout(() => setMessage(""), 5000)
         }
-        
-        setTimeout(() => setMessage(""), 5000)
       } else {
-        const errorDetails = result.details ? `: ${result.details}` : ''
-        setMessage(`❌ 保存失败${errorDetails}`)
-        console.error('Save failed:', result)
+        if (!isAutoSave) {
+          const errorDetails = result.details ? `: ${result.details}` : ''
+          setMessage(`❌ 保存失败${errorDetails}`)
+          console.error('Save failed:', result)
+        }
       }
     } catch (error) {
       console.error('Save error:', error)
-      setMessage(`❌ 保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      if (!isAutoSave) {
+        setMessage(`❌ 保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      }
     } finally {
-      setSaving(false)
+      if (isAutoSave) {
+        setAutoSaving(false)
+      } else {
+        setSaving(false)
+      }
     }
   }
+
+  // 手动保存
+  const handleSave = () => {
+    performSave(false)
+  }
+
+  // 自动保存（防抖：用户停止输入2秒后保存）
+  const debouncedAutoSave = useDebouncedCallback(
+    () => {
+      if (hasUnsavedChanges.current) {
+        performSave(true)
+      }
+    },
+    2000 // 2秒延迟
+  )
+
+  // 标记有未保存的更改并触发自动保存
+  const markAsChanged = useCallback(() => {
+    hasUnsavedChanges.current = true
+    debouncedAutoSave()
+  }, [debouncedAutoSave])
 
   // ===== 团队成员操作 =====
   const addTeamMember = () => {
@@ -117,6 +157,7 @@ export default function AdminPage() {
     const updated = [...teamData]
     updated[index] = { ...updated[index], [field]: value }
     setTeamData(updated)
+    markAsChanged()
   }
 
   // ===== 投资组合操作 =====
@@ -144,6 +185,7 @@ export default function AdminPage() {
       updated.portfolio.items[index].name[lang] = value
     }
     setContentData(updated)
+    markAsChanged()
   }
 
   const addPortfolioFounder = (itemIndex: number) => {
@@ -169,6 +211,7 @@ export default function AdminPage() {
       updated.portfolio.items[itemIndex].founders[founderIndex].name[lang] = value
     }
     setContentData(updated)
+    markAsChanged()
   }
 
   // ===== 项目操作 =====
@@ -196,6 +239,7 @@ export default function AdminPage() {
       updated.projects.list[index][field][lang] = value
     }
     setContentData(updated)
+    markAsChanged()
   }
 
   // ===== 研究活动操作 =====
@@ -227,6 +271,7 @@ export default function AdminPage() {
       updated.research.list[index][field][lang] = value
     }
     setContentData(updated)
+    markAsChanged()
   }
 
   const addArticle = (researchIndex: number) => {
@@ -258,6 +303,7 @@ export default function AdminPage() {
       updated.research.list[researchIndex].articles[articleIndex][field][lang] = value
     }
     setContentData(updated)
+    markAsChanged()
   }
 
   // 切换文章展开/折叠状态
@@ -389,6 +435,42 @@ export default function AdminPage() {
       }}>
         <h1 style={{ fontSize: "20px", fontWeight: "bold" }}>锦秋基金 - 内容管理</h1>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {/* 自动保存状态 */}
+          {autoSaving && (
+            <span style={{
+              color: "#17a2b8",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}>
+              <span className="saving-spinner" style={{
+                display: "inline-block",
+                width: "12px",
+                height: "12px",
+                border: "2px solid #17a2b8",
+                borderTopColor: "transparent",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite"
+              }} />
+              自动保存中...
+            </span>
+          )}
+          
+          {/* 最后保存时间 */}
+          {!autoSaving && lastSaved && (
+            <span style={{
+              color: "#28a745",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}>
+              ✓ 已保存 {new Date(lastSaved).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+          )}
+          
+          {/* 手动保存消息 */}
           {message && (
             <span style={{
               color: message.includes("成功") ? "green" : "red",
@@ -397,6 +479,7 @@ export default function AdminPage() {
               {message}
             </span>
           )}
+          
           <button
             onClick={handleSave}
             disabled={saving}
@@ -410,7 +493,7 @@ export default function AdminPage() {
               fontWeight: "bold"
             }}
           >
-            {saving ? "保存中..." : "保存所有更改"}
+            {saving ? "保存中..." : "手动保存"}
           </button>
         </div>
       </div>
@@ -1675,6 +1758,15 @@ export default function AdminPage() {
           to {
             transform: scale(1);
             opacity: 1;
+          }
+        }
+        
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
           }
         }
       `}</style>
