@@ -82,20 +82,12 @@ export default function AdminPage() {
 
       if (response.ok) {
         const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
-        setMessage(`✓ 保存成功到 ${saveMethod}！正在验证...`)
+        setMessage(`✓ 保存成功到 ${saveMethod}！`)
         
-        // Edge Config 需要时间传播，等待更长时间
+        // 不需要重新加载数据，因为本地状态已经是最新的
+        // 只在Edge Config模式下提示传播延迟
         if (result.edgeConfigUpdated) {
-          // 等待 3 秒让 Edge Config 传播
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          
-          // 重新加载验证
-          await loadData()
-          setMessage(`✓ 保存成功并已验证！`)
-        } else {
-          // 本地保存，立即重新加载
-          await loadData()
-          setMessage(`✓ 保存成功！`)
+          setMessage(`✓ 保存成功到 ${saveMethod}！(注意：Edge Config 更新可能需要几秒钟传播到全球)`)
         }
         
         setTimeout(() => setMessage(""), 5000)
