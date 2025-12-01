@@ -13,8 +13,12 @@ function verifyPassword(password: string): boolean {
 }
 
 // 判断是否使用 Edge Config（检查环境变量是否存在）
+// 注意：Edge Config 可能有大小限制，推荐只在数据较小时使用
 function hasEdgeConfig(): boolean {
-  return !!process.env.EDGE_CONFIG
+  // 暂时禁用 Edge Config，因为发现有大小限制问题
+  // 改用直接读写文件的方式
+  return false
+  // return !!process.env.EDGE_CONFIG
 }
 
 // GET: 获取内容数据
