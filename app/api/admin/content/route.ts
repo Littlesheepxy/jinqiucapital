@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, checkSupabaseConfig } from '@/lib/supabase'
+import fs from 'fs'
+import path from 'path'
+
+const CONTENT_FILE = path.join(process.cwd(), 'public/data/content.json')
+const TEAM_FILE = path.join(process.cwd(), 'public/data/team.json')
 
 // 简单的密码验证
 function verifyPassword(password: string): boolean {
@@ -10,6 +15,18 @@ function verifyPassword(password: string): boolean {
 // GET: 获取内容数据
 export async function GET(request: NextRequest) {
   try {
+    // 检查 Supabase 配置，如果未配置则降级到文件系统
+    if (!checkSupabaseConfig()) {
+      console.log('📁 使用文件系统读取数据（Supabase 未配置）')
+      const contentData = JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf-8'))
+      const teamData = JSON.parse(fs.readFileSync(TEAM_FILE, 'utf-8'))
+      
+      return NextResponse.json({
+        content: contentData,
+        team: teamData
+      })
+    }
+
     // 从 Supabase 读取最新数据
     const { data: contentRecord, error: contentError } = await supabase
       .from('content')
@@ -62,6 +79,31 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid password' },
         { status: 401 }
       )
+    }
+
+    // 如果 Supabase 未配置，降级到文件系统
+    if (!checkSupabaseConfig()) {
+      console.log('📁 使用文件系统保存数据（Supabase 未配置）')
+      
+      try {
+        if (content) {
+          fs.writeFileSync(CONTENT_FILE, JSON.stringify(content, null, 2), 'utf-8')
+        }
+        if (team) {
+          fs.writeFileSync(TEAM_FILE, JSON.stringify(team, null, 2), 'utf-8')
+        }
+        
+        return NextResponse.json({ 
+          success: true,
+          message: 'Data saved to file system (Supabase not configured)'
+        })
+      } catch (fsError) {
+        console.error('Failed to write to file system:', fsError)
+        return NextResponse.json(
+          { error: 'Failed to save data', details: fsError instanceof Error ? fsError.message : 'Unknown error' },
+          { status: 500 }
+        )
+      }
     }
 
     // 获取当前版本号

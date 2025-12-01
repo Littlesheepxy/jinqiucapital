@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, checkSupabaseConfig } from '@/lib/supabase'
 
 // GET: 获取版本历史
 export async function GET(request: NextRequest) {
   try {
+    // 如果 Supabase 未配置，返回空列表
+    if (!checkSupabaseConfig()) {
+      return NextResponse.json({ versions: [] })
+    }
     const searchParams = request.nextUrl.searchParams
     const dataType = searchParams.get('type') // 'content' 或 'team'
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -41,6 +45,11 @@ export async function GET(request: NextRequest) {
 // DELETE: 删除版本历史
 export async function DELETE(request: NextRequest) {
   try {
+    // 如果 Supabase 未配置，返回成功
+    if (!checkSupabaseConfig()) {
+      return NextResponse.json({ success: true })
+    }
+
     const searchParams = request.nextUrl.searchParams
     const versionId = searchParams.get('id')
 
