@@ -64,16 +64,42 @@ export default function AdminPage() {
     }
   }
 
-  // 从 LocalStorage 加载版本历史
-  const loadVersionHistory = () => {
+  // 从 Supabase 加载版本历史
+  const loadVersionHistory = async () => {
     try {
-      const saved = localStorage.getItem('jinqiu_version_history')
-      if (saved) {
-        const history = JSON.parse(saved)
+      const response = await fetch('/api/admin/versions?type=content&limit=50')
+      if (response.ok) {
+        const data = await response.json()
+        // 转换 Supabase 版本格式为本地格式
+        const history = data.versions.map((v: any) => ({
+          timestamp: new Date(v.created_at).getTime(),
+          content: v.data_type === 'content' ? v.data : null,
+          team: v.data_type === 'team' ? v.data : null,
+          description: v.description || `版本 ${v.version}`,
+          version: v.version,
+          id: v.id,
+        }))
         setVersionHistory(history)
+      } else {
+        // 如果 Supabase 未配置，从 localStorage 加载
+        const saved = localStorage.getItem('jinqiu_version_history')
+        if (saved) {
+          const history = JSON.parse(saved)
+          setVersionHistory(history)
+        }
       }
     } catch (error) {
       console.error('Failed to load version history:', error)
+      // 降级到 localStorage
+      try {
+        const saved = localStorage.getItem('jinqiu_version_history')
+        if (saved) {
+          const history = JSON.parse(saved)
+          setVersionHistory(history)
+        }
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e)
+      }
     }
   }
 
@@ -262,19 +288,35 @@ export default function AdminPage() {
         hasUnsavedChanges.current = false
         setLastSaved(new Date())
         
-        // 保存成功后创建版本快照
+        // 保存成功后创建版本快照（仅本地，服务器会自动创建）
         const description = isAutoSave ? '自动保存' : '手动保存'
         saveVersion(description)
         
         // 保存成功后清除本地草稿
         clearLocalDraft()
         
+        // 重新加载数据以同步主页
+        await loadData()
+        
         if (!isAutoSave) {
-          const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
-          setMessage(`✓ 保存成功到 ${saveMethod}！`)
-          
-          if (result.edgeConfigUpdated) {
-            setMessage(`✓ 保存成功到 ${saveMethod}！(注意：Edge Config 更新可能需要几秒钟传播到全球)`)
+          // 根据返回的消息判断保存方式
+          let saveMethod = 'Supabase 数据库'
+          if (result.message) {
+            if (result.message.includes('Supabase')) {
+              saveMethod = 'Supabase 数据库'
+              if (result.versions) {
+                setMessage(`✓ 保存成功！版本: content v${result.versions.content}, team v${result.versions.team}`)
+              } else {
+                setMessage(`✓ 保存成功到 ${saveMethod}！`)
+              }
+            } else if (result.message.includes('file system')) {
+              saveMethod = '本地文件系统'
+              setMessage(`✓ 保存成功到 ${saveMethod}！（Supabase 未配置）`)
+            } else {
+              setMessage(`✓ ${result.message}`)
+            }
+          } else {
+            setMessage(`✓ 保存成功到 ${saveMethod}！`)
           }
           
           setTimeout(() => setMessage(""), 5000)
@@ -1942,7 +1984,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                       
-                      {/* 版本详情 */}
+                      {/* 版本详情 - 显示详细更改 */}
                       {selectedVersion === version.timestamp && (
                         <div style={{
                           marginTop: "12px",
@@ -1950,18 +1992,133 @@ export default function AdminPage() {
                           backgroundColor: "#f9f9f9",
                           borderRadius: "6px",
                           fontSize: "13px",
-                          maxHeight: "200px",
+                          maxHeight: "400px",
                           overflow: "auto"
                         }}>
-                          <div style={{ marginBottom: "8px" }}>
-                            <strong>数据概览：</strong>
-                          </div>
-                          <div style={{ color: "#666", lineHeight: "1.6" }}>
-                            • 团队成员: {version.team?.length || 0} 人<br/>
-                            • 投资项目: {version.content?.portfolio?.items?.length || 0} 个<br/>
-                            • 项目: {version.content?.projects?.list?.length || 0} 个<br/>
-                            • 研究活动: {version.content?.research?.list?.length || 0} 个
-                          </div>
+                          {(() => {
+                            // 获取当前版本和上一版本的数据
+                            const currentVersion = version
+                            const previousVersion = index < versionHistory.length - 1 ? versionHistory[index + 1] : null
+                            
+                            const changes: string[] = []
+                            
+                            if (currentVersion.content && previousVersion?.content) {
+                              // 检测内容更改
+                              const curr = currentVersion.content
+                              const prev = previousVersion.content
+                              
+                              // 品牌名称
+                              if (curr.settings?.brandName?.zh !== prev.settings?.brandName?.zh) {
+                                changes.push(`🏷️ 品牌名称(中): ${prev.settings?.brandName?.zh || '无'} → ${curr.settings?.brandName?.zh || '无'}`)
+                              }
+                              if (curr.settings?.brandName?.en !== prev.settings?.brandName?.en) {
+                                changes.push(`🏷️ 品牌名称(英): ${prev.settings?.brandName?.en || '无'} → ${curr.settings?.brandName?.en || '无'}`)
+                              }
+                              
+                              // 关于我们
+                              if (curr.about?.intro?.zh !== prev.about?.intro?.zh) {
+                                const prevLength = prev.about?.intro?.zh?.length || 0
+                                const currLength = curr.about?.intro?.zh?.length || 0
+                                changes.push(`📝 关于我们(中): ${prevLength}字 → ${currLength}字`)
+                              }
+                              if (curr.about?.intro?.en !== prev.about?.intro?.en) {
+                                const prevLength = prev.about?.intro?.en?.length || 0
+                                const currLength = curr.about?.intro?.en?.length || 0
+                                changes.push(`📝 关于我们(英): ${prevLength}字 → ${currLength}字`)
+                              }
+                              
+                              // 投资组合
+                              const prevPortfolioCount = prev.portfolio?.items?.length || 0
+                              const currPortfolioCount = curr.portfolio?.items?.length || 0
+                              if (prevPortfolioCount !== currPortfolioCount) {
+                                changes.push(`💼 投资组合: ${prevPortfolioCount}个 → ${currPortfolioCount}个`)
+                              } else if (JSON.stringify(curr.portfolio?.items) !== JSON.stringify(prev.portfolio?.items)) {
+                                changes.push(`💼 投资组合: 内容已修改 (${currPortfolioCount}个项目)`)
+                              }
+                              
+                              // 项目
+                              const prevProjectsCount = prev.projects?.list?.length || 0
+                              const currProjectsCount = curr.projects?.list?.length || 0
+                              if (prevProjectsCount !== currProjectsCount) {
+                                changes.push(`🚀 项目: ${prevProjectsCount}个 → ${currProjectsCount}个`)
+                              } else if (JSON.stringify(curr.projects?.list) !== JSON.stringify(prev.projects?.list)) {
+                                changes.push(`🚀 项目: 内容已修改 (${currProjectsCount}个项目)`)
+                              }
+                              
+                              // 研究活动
+                              const prevResearchCount = prev.research?.list?.length || 0
+                              const currResearchCount = curr.research?.list?.length || 0
+                              if (prevResearchCount !== currResearchCount) {
+                                changes.push(`📚 研究活动: ${prevResearchCount}个 → ${currResearchCount}个`)
+                              } else if (JSON.stringify(curr.research?.list) !== JSON.stringify(prev.research?.list)) {
+                                changes.push(`📚 研究活动: 内容已修改 (${currResearchCount}个项目)`)
+                                
+                                // 检测具体哪个研究活动被修改
+                                curr.research?.list?.forEach((item: any, i: number) => {
+                                  const prevItem = prev.research?.list?.[i]
+                                  if (prevItem) {
+                                    if (item.intro?.zh !== prevItem.intro?.zh) {
+                                      changes.push(`  ↳ ${item.name?.zh || item.name?.en}: 简介(中)已修改`)
+                                    }
+                                    if (item.intro?.en !== prevItem.intro?.en) {
+                                      changes.push(`  ↳ ${item.name?.zh || item.name?.en}: 简介(英)已修改`)
+                                    }
+                                    if (item.articles?.length !== prevItem.articles?.length) {
+                                      changes.push(`  ↳ ${item.name?.zh || item.name?.en}: 文章数 ${prevItem.articles?.length || 0} → ${item.articles?.length || 0}`)
+                                    }
+                                  }
+                                })
+                              }
+                            }
+                            
+                            if (currentVersion.team && previousVersion?.team) {
+                              // 检测团队更改
+                              const prevTeamCount = previousVersion.team?.length || 0
+                              const currTeamCount = currentVersion.team?.length || 0
+                              if (prevTeamCount !== currTeamCount) {
+                                changes.push(`👥 团队成员: ${prevTeamCount}人 → ${currTeamCount}人`)
+                              } else if (JSON.stringify(currentVersion.team) !== JSON.stringify(previousVersion.team)) {
+                                changes.push(`👥 团队成员: 信息已修改 (${currTeamCount}人)`)
+                              }
+                            }
+                            
+                            return (
+                              <div>
+                                <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
+                                  📋 详细更改历史：
+                                </div>
+                                {changes.length > 0 ? (
+                                  <div style={{ color: "#444", lineHeight: "2", whiteSpace: "pre-wrap" }}>
+                                    {changes.map((change, i) => (
+                                      <div key={i} style={{ 
+                                        padding: "4px 0",
+                                        borderBottom: i < changes.length - 1 ? "1px solid #e0e0e0" : "none"
+                                      }}>
+                                        {change}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div style={{ color: "#999", fontStyle: "italic" }}>
+                                    {index === versionHistory.length - 1 ? "初始版本" : "无更改"}
+                                  </div>
+                                )}
+                                
+                                {/* 数据概览 */}
+                                <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid #ddd" }}>
+                                  <div style={{ marginBottom: "8px", fontWeight: "bold" }}>
+                                    📊 数据快照：
+                                  </div>
+                                  <div style={{ color: "#666", lineHeight: "1.8" }}>
+                                    • 团队成员: {version.team?.length || 0} 人<br/>
+                                    • 投资项目: {version.content?.portfolio?.items?.length || 0} 个<br/>
+                                    • 项目: {version.content?.projects?.list?.length || 0} 个<br/>
+                                    • 研究活动: {version.content?.research?.list?.length || 0} 个
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })()}
                         </div>
                       )}
                     </div>
