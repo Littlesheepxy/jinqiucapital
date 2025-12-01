@@ -35,6 +35,20 @@ export default function AdminPage() {
   }>>([])
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
 
+  // 页面离开前警告
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges.current) {
+        e.preventDefault()
+        e.returnValue = '您有未保存到服务器的更改，确定要离开吗？'
+        return e.returnValue
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
   // 加载数据
   const loadData = async () => {
     try {
@@ -60,6 +74,60 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Failed to load version history:', error)
+    }
+  }
+
+  // 检查本地草稿
+  const checkForLocalDraft = () => {
+    try {
+      const draft = localStorage.getItem('jinqiu_local_draft')
+      if (draft) {
+        const draftData = JSON.parse(draft)
+        // 检查草稿是否在30分钟内
+        const draftAge = Date.now() - draftData.timestamp
+        return draftAge < 30 * 60 * 1000 // 30分钟
+      }
+    } catch (error) {
+      console.error('Failed to check local draft:', error)
+    }
+    return false
+  }
+
+  // 加载本地草稿
+  const loadLocalDraft = () => {
+    try {
+      const draft = localStorage.getItem('jinqiu_local_draft')
+      if (draft) {
+        const draftData = JSON.parse(draft)
+        setContentData(draftData.content)
+        setTeamData(draftData.team)
+        hasUnsavedChanges.current = true
+      }
+    } catch (error) {
+      console.error('Failed to load local draft:', error)
+    }
+  }
+
+  // 保存本地草稿
+  const saveLocalDraft = () => {
+    try {
+      const draft = {
+        timestamp: Date.now(),
+        content: contentData,
+        team: teamData
+      }
+      localStorage.setItem('jinqiu_local_draft', JSON.stringify(draft))
+    } catch (error) {
+      console.error('Failed to save local draft:', error)
+    }
+  }
+
+  // 清除本地草稿
+  const clearLocalDraft = () => {
+    try {
+      localStorage.removeItem('jinqiu_local_draft')
+    } catch (error) {
+      console.error('Failed to clear local draft:', error)
     }
   }
 
@@ -131,7 +199,30 @@ export default function AdminPage() {
 
       if (response.ok) {
         setIsAuthenticated(true)
-        loadData()
+        
+        // 检查是否有本地草稿
+        const hasDraft = checkForLocalDraft()
+        
+        if (hasDraft) {
+          // 有本地草稿，询问用户是否恢复
+          const useDraft = confirm(
+            '🔔 检测到本地有未保存的编辑内容！\n\n' +
+            '✅ 点击"确定"恢复本地编辑内容\n' +
+            '❌ 点击"取消"加载服务器最新数据（本地编辑将丢失）'
+          )
+          
+          if (useDraft) {
+            loadLocalDraft()
+            setMessage('✓ 已恢复本地编辑内容，请记得保存到服务器！')
+            setTimeout(() => setMessage(''), 5000)
+          } else {
+            clearLocalDraft()
+            loadData()
+          }
+        } else {
+          loadData()
+        }
+        
         // 显示欢迎弹窗和撒花效果
         setShowWelcomeModal(true)
         setShowConfetti(true)
@@ -174,6 +265,9 @@ export default function AdminPage() {
         // 保存成功后创建版本快照
         const description = isAutoSave ? '自动保存' : '手动保存'
         saveVersion(description)
+        
+        // 保存成功后清除本地草稿
+        clearLocalDraft()
         
         if (!isAutoSave) {
           const saveMethod = result.edgeConfigUpdated ? 'Edge Config (生产环境)' : 'JSON 文件 (本地)'
@@ -224,8 +318,9 @@ export default function AdminPage() {
   // 标记有未保存的更改并触发自动保存
   const markAsChanged = useCallback(() => {
     hasUnsavedChanges.current = true
+    saveLocalDraft() // 保存本地草稿
     debouncedAutoSave()
-  }, [debouncedAutoSave])
+  }, [debouncedAutoSave, contentData, teamData])
 
   // ===== 团队成员操作 =====
   const addTeamMember = () => {
@@ -518,6 +613,23 @@ export default function AdminPage() {
       }}>
         <h1 style={{ fontSize: "20px", fontWeight: "bold" }}>锦秋基金 - 内容管理</h1>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          {/* 未保存警告 */}
+          {hasUnsavedChanges.current && !autoSaving && !saving && (
+            <span style={{
+              color: "#ff9800",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              backgroundColor: "#fff3e0",
+              padding: "4px 10px",
+              borderRadius: "4px",
+              border: "1px solid #ffe0b2"
+            }}>
+              ⚠️ 有未保存到服务器的更改
+            </span>
+          )}
+          
           {/* 自动保存状态 */}
           {autoSaving && (
             <span style={{
