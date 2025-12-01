@@ -1,0 +1,33 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// 数据类型定义
+export interface ContentData {
+  id?: number
+  data: any
+  version: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface TeamData {
+  id?: number
+  data: any[]
+  version: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface VersionHistory {
+  id?: number
+  data_type: 'content' | 'team'
+  data: any
+  version: number
+  description?: string
+  created_at?: string
+}
+

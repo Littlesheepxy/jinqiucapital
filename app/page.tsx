@@ -162,18 +162,18 @@ export default function Page() {
 
             return (
               <li key={i} style={{ marginBottom: "12px" }}>
-                {item.link ? (
-                  <a
-                    href={item.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-                  >
-                    {item.name[lang]}
-                  </a>
-                ) : (
-                  <strong>{item.name[lang]}</strong>
-                )}
+              {item.link ? (
+                <a
+                  href={item.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+                >
+                  {item.name[lang]}
+                </a>
+              ) : (
+                <strong>{item.name[lang]}</strong>
+              )}
                 {item.founders && item.founders.length > 0 && (
                   <span style={{ color: "#666" }}>
                     {lang === "zh" ? ", 由" : ", founded by "}
@@ -181,7 +181,7 @@ export default function Page() {
                     {lang === "zh" ? "创立" : ""}
                   </span>
                 )}
-              </li>
+            </li>
             )
           })}
         </ul>
