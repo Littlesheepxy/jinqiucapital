@@ -7,6 +7,7 @@ export default function Page() {
   const [language, setLanguage] = useState<"zh" | "en">("zh")
   const [contentData, setContentData] = useState<any>(null)
   const [teamData, setTeamData] = useState<any[]>([])
+  const [showAllPortfolio, setShowAllPortfolio] = useState(false)
 
   useEffect(() => {
     // Detect browser language
@@ -118,73 +119,112 @@ export default function Page() {
       </h2>
       <p style={{ marginBottom: "16px" }}>{contentData.portfolio.desc[lang]}</p>
       {contentData.portfolio.items && contentData.portfolio.items.length > 0 && (
-        <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-          {contentData.portfolio.items.map((item: any, i: number) => {
-            // 格式化创始人列表
-            const formatFounders = (founders: any[]) => {
-              if (!founders || founders.length === 0) return ""
-              
-              const founderElements = founders.map((founder: any, fIndex: number) => {
-                const name = founder.link ? (
-                  <a
-                    href={founder.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "#225BBA", textDecoration: "none" }}
-                  >
-                    {founder.name[lang]}
-                  </a>
-                ) : (
-                  founder.name[lang]
-                )
-                
-                // 中文: 使用顿号和"和"
-                if (lang === "zh") {
-                  if (fIndex === founders.length - 1 && founders.length > 1) {
-                    return <span key={fIndex}>和{name}</span>
-                  } else if (fIndex > 0) {
-                    return <span key={fIndex}>、{name}</span>
-                  }
-                  return <span key={fIndex}>{name}</span>
+        <>
+          <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "16px" }}>
+            {contentData.portfolio.items
+              .slice(0, showAllPortfolio ? contentData.portfolio.items.length : 10)
+              .map((item: any, i: number) => {
+                // 格式化创始人列表
+                const formatFounders = (founders: any[]) => {
+                  if (!founders || founders.length === 0) return ""
+                  
+                  const founderElements = founders.map((founder: any, fIndex: number) => {
+                    const name = founder.link ? (
+                      <a
+                        href={founder.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#225BBA", textDecoration: "none" }}
+                      >
+                        {founder.name[lang]}
+                      </a>
+                    ) : (
+                      founder.name[lang]
+                    )
+                    
+                    // 中文: 使用顿号和"和"
+                    if (lang === "zh") {
+                      if (fIndex === founders.length - 1 && founders.length > 1) {
+                        return <span key={fIndex}>和{name}</span>
+                      } else if (fIndex > 0) {
+                        return <span key={fIndex}>、{name}</span>
+                      }
+                      return <span key={fIndex}>{name}</span>
+                    }
+                    
+                    // 英文: 使用逗号和"and"
+                    if (fIndex === founders.length - 1 && founders.length > 1) {
+                      return <span key={fIndex}>, and {name}</span>
+                    } else if (fIndex > 0) {
+                      return <span key={fIndex}>, {name}</span>
+                    }
+                    return <span key={fIndex}>{name}</span>
+                  })
+                  
+                  return founderElements
                 }
-                
-                // 英文: 使用逗号和"and"
-                if (fIndex === founders.length - 1 && founders.length > 1) {
-                  return <span key={fIndex}>, and {name}</span>
-                } else if (fIndex > 0) {
-                  return <span key={fIndex}>, {name}</span>
-                }
-                return <span key={fIndex}>{name}</span>
-              })
-              
-              return founderElements
-            }
 
-            return (
-              <li key={i} style={{ marginBottom: "12px" }}>
-              {item.link ? (
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-                >
-                  {item.name[lang]}
-                </a>
-              ) : (
-                <strong>{item.name[lang]}</strong>
-              )}
-                {item.founders && item.founders.length > 0 && (
-                  <span style={{ color: "#666" }}>
-                    {lang === "zh" ? ", 由" : ", founded by "}
-                    {formatFounders(item.founders)}
-                    {lang === "zh" ? "创立" : ""}
-                  </span>
-                )}
-            </li>
-            )
-          })}
-        </ul>
+                return (
+                  <li key={i} style={{ marginBottom: "12px" }}>
+                    {item.link ? (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+                      >
+                        {item.name[lang]}
+                      </a>
+                    ) : (
+                      <strong>{item.name[lang]}</strong>
+                    )}
+                    {item.founders && item.founders.length > 0 && (
+                      <span style={{ color: "#666" }}>
+                        {lang === "zh" ? ", 由" : ", founded by "}
+                        {formatFounders(item.founders)}
+                        {lang === "zh" ? "创立" : ""}
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+          </ul>
+          
+          {/* 显示更多/收起按钮 */}
+          {contentData.portfolio.items.length > 10 && (
+            <div style={{ marginBottom: "40px" }}>
+              <button
+                onClick={() => setShowAllPortfolio(!showAllPortfolio)}
+                style={{
+                  background: "none",
+                  border: "1px solid #225BBA",
+                  color: "#225BBA",
+                  padding: "8px 20px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  borderRadius: "4px",
+                  fontWeight: "500",
+                  transition: "all 0.2s",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "#225BBA"
+                  e.currentTarget.style.color = "#fff"
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "none"
+                  e.currentTarget.style.color = "#225BBA"
+                }}
+              >
+                {showAllPortfolio 
+                  ? (lang === "zh" ? `收起 ▲` : `Show Less ▲`)
+                  : (lang === "zh" 
+                      ? `显示更多 (${contentData.portfolio.items.length - 10}) ▼` 
+                      : `Show More (${contentData.portfolio.items.length - 10}) ▼`)
+                }
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
