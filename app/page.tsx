@@ -81,7 +81,7 @@ export default function Page() {
       <h2 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "20px" }}>
         Team
       </h2>
-      <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
+      <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "16px" }}>
         {teamData.map((member, i) => (
           <li key={i} style={{ marginBottom: "8px" }}>
             {member.link ? (
@@ -100,7 +100,7 @@ export default function Page() {
           </li>
         ))}
       </ul>
-      <p style={{ marginTop: "8px", marginBottom: "0" }}>
+      <p style={{ marginTop: "0", marginBottom: "0" }}>
         <a 
           href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
           target="_blank"
