@@ -99,17 +99,17 @@ export default function Page() {
             {member.title && ` | ${member.title}`}
           </li>
         ))}
-        <li style={{ marginTop: "16px" }}>
-          <a 
-            href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-          >
-            {lang === "zh" ? "加入我们" : "Join Us"}
-          </a>
-        </li>
       </ul>
+      <p style={{ marginTop: "16px" }}>
+        <a 
+          href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+        >
+          {lang === "zh" ? "加入我们" : "Join Us"}
+        </a>
+      </p>
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
 
@@ -190,29 +190,22 @@ export default function Page() {
               })}
           </ul>
           
-          {/* 显示更多/收起按钮 */}
+          {/* 显示更多/收起文本链接 */}
           {contentData.portfolio.items.length > 10 && (
-            <div style={{ marginBottom: "40px" }}>
-              <button
+            <p style={{ marginBottom: "40px" }}>
+              <span
                 onClick={() => setShowAllPortfolio(!showAllPortfolio)}
                 style={{
-                  background: "none",
-                  border: "1px solid #225BBA",
                   color: "#225BBA",
-                  padding: "8px 20px",
                   cursor: "pointer",
                   fontSize: "14px",
-                  borderRadius: "4px",
-                  fontWeight: "500",
-                  transition: "all 0.2s",
+                  textDecoration: "none",
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = "#225BBA"
-                  e.currentTarget.style.color = "#fff"
+                  e.currentTarget.style.textDecoration = "underline"
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = "none"
-                  e.currentTarget.style.color = "#225BBA"
+                  e.currentTarget.style.textDecoration = "none"
                 }}
               >
                 {showAllPortfolio 
@@ -221,8 +214,8 @@ export default function Page() {
                       ? `显示更多 (${contentData.portfolio.items.length - 10}) ▼` 
                       : `Show More (${contentData.portfolio.items.length - 10}) ▼`)
                 }
-              </button>
-            </div>
+              </span>
+            </p>
           )}
         </>
       )}
