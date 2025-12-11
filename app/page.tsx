@@ -100,12 +100,12 @@ export default function Page() {
           </li>
         ))}
       </ul>
-      <p style={{ marginTop: "16px" }}>
+      <p style={{ marginTop: "8px", marginBottom: "0" }}>
         <a 
           href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+          style={{ color: "#225BBA", textDecoration: "none", fontSize: "14px" }}
         >
           {lang === "zh" ? "加入我们" : "Join Us"}
         </a>
