@@ -76,29 +76,16 @@ export default function WechatArticlePage() {
     setLanguage(language === "zh" ? "en" : "zh")
   }
 
-  // Convert HTML content to simple text/markdown display
-  const renderContent = (html: string) => {
-    if (!html) return null
+  // 清理并渲染 HTML 内容
+  const cleanHtml = (html: string) => {
+    if (!html) return ""
     
-    // 简单清理 HTML，保留基本格式
-    const cleaned = html
+    // 只移除危险的标签，保留其他内容包括图片
+    return html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<img[^>]*>/gi, '') // 移除图片标签
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/p>/gi, '\n\n')
-      .replace(/<\/div>/gi, '\n')
-      .replace(/<\/h[1-6]>/gi, '\n\n')
-      .replace(/<[^>]+>/g, '') // 移除所有其他标签
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/\n{3,}/g, '\n\n') // 压缩多余换行
-      .trim()
-    
-    return cleaned
+      .replace(/on\w+="[^"]*"/gi, '') // 移除事件处理器
+      .replace(/javascript:/gi, '') // 移除 javascript: 链接
   }
 
   const lang = language
@@ -193,14 +180,41 @@ export default function WechatArticlePage() {
       </div>
 
       {/* Article Content */}
-      <div style={{ 
-        marginBottom: "40px",
-        whiteSpace: "pre-wrap",
-        fontSize: "16px",
-        lineHeight: "1.8"
-      }}>
-        {renderContent(article.content) || article.description || "暂无内容"}
-      </div>
+      <div 
+        className="wechat-article-content"
+        style={{ 
+          marginBottom: "40px",
+          fontSize: "16px",
+          lineHeight: "1.8",
+          color: "#333"
+        }}
+        dangerouslySetInnerHTML={{ 
+          __html: cleanHtml(article.content) || article.description || "暂无内容" 
+        }}
+      />
+      <style jsx global>{`
+        .wechat-article-content img {
+          max-width: 100%;
+          height: auto;
+          margin: 16px 0;
+          border-radius: 8px;
+        }
+        .wechat-article-content p {
+          margin: 12px 0;
+        }
+        .wechat-article-content h1,
+        .wechat-article-content h2,
+        .wechat-article-content h3 {
+          margin: 24px 0 12px;
+          font-weight: bold;
+        }
+        .wechat-article-content a {
+          color: #225BBA;
+        }
+        .wechat-article-content section {
+          margin: 16px 0;
+        }
+      `}</style>
 
       {/* View Original Link */}
       {article.url && (
