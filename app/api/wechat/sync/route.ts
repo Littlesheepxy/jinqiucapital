@@ -10,7 +10,7 @@ import {
   getArticlesByMpName,
   type WeMpRssArticle,
 } from "@/lib/wemprss";
-import { CATEGORIES, categorizeArticle } from "../articles/route";
+import { CATEGORIES, categorizeArticle, extractDescription, formatDate } from "@/lib/wechat-categories";
 
 const WEMPRSS_URL = process.env.WEMPRSS_URL || "http://81.70.105.204:8001";
 
@@ -23,28 +23,6 @@ const supabase = supabaseUrl && supabaseKey
 
 // 默认获取的公众号名称
 const DEFAULT_MP_NAME = "锦秋集";
-
-/**
- * 格式化日期
- */
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-/**
- * 从内容中提取描述
- */
-function extractDescription(content: string, maxLength = 200): string {
-  if (!content) return "";
-  const text = content.replace(/<[^>]+>/g, "").trim();
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + "...";
-}
 
 /**
  * GET: 获取同步状态

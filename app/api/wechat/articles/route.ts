@@ -11,6 +11,12 @@ import {
   getArticlesByMpName,
   type WeMpRssArticle,
 } from "@/lib/wemprss";
+import { 
+  CATEGORIES, 
+  categorizeArticle, 
+  extractDescription, 
+  formatDate 
+} from "@/lib/wechat-categories";
 
 // Supabase 客户端
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,45 +27,6 @@ const supabase = supabaseUrl && supabaseKey
 
 // 默认获取的公众号名称
 const DEFAULT_MP_NAME = "锦秋集";
-
-// 栏目配置（slug -> 配置）
-export const CATEGORIES: Record<string, { name: { zh: string; en: string }; keywords: string[] }> = {
-  "jinqiu-select": {
-    name: { zh: "Jinqiu Select", en: "Jinqiu Select" },
-    keywords: ["精选", "Select", "报告", "研究", "解读"],
-  },
-  "jinqiu-scan": {
-    name: { zh: "Jinqiu Scan", en: "Jinqiu Scan" },
-    keywords: ["扫描", "Scan", "测评", "产品", "工具"],
-  },
-  "jinqiu-spotlight": {
-    name: { zh: "Jinqiu Spotlight", en: "Jinqiu Spotlight" },
-    keywords: ["Spotlight", "聚光", "创业者", "专访"],
-  },
-  "jinqiu-roundtable": {
-    name: { zh: "锦秋小饭桌", en: "Jinqiu Roundtable" },
-    keywords: ["小饭桌", "Roundtable", "饭局", "聚餐"],
-  },
-  "jinqiu-summit": {
-    name: { zh: "锦秋会", en: "Jinqiu Summit" },
-    keywords: ["锦秋会", "Summit", "峰会", "大会"],
-  },
-};
-
-// 文章分类函数
-export function categorizeArticle(article: { title?: string; content?: string }): string | null {
-  const title = article.title?.toLowerCase() || "";
-  const content = (article.content?.substring(0, 500) || "").toLowerCase();
-  
-  for (const [slug, config] of Object.entries(CATEGORIES)) {
-    if (config.keywords.some(kw => 
-      title.includes(kw.toLowerCase()) || content.includes(kw.toLowerCase())
-    )) {
-      return slug;
-    }
-  }
-  return null; // 未分类
-}
 
 // 格式化单篇文章（用于 We-MP-RSS 数据）
 function formatArticleFromWeMpRss(article: WeMpRssArticle, feedName?: string) {
@@ -373,28 +340,3 @@ async function saveArticlesToDb(articles: any[]) {
   }
 }
 
-/**
- * 从内容中提取描述
- */
-function extractDescription(content: string, maxLength = 200): string {
-  if (!content) return "";
-  
-  // 移除 HTML 标签
-  const text = content.replace(/<[^>]+>/g, "").trim();
-  
-  if (text.length <= maxLength) return text;
-  
-  return text.substring(0, maxLength) + "...";
-}
-
-/**
- * 格式化日期
- */
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}

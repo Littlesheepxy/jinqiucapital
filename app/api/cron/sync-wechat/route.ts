@@ -11,7 +11,7 @@ import {
   getArticlesByMpName,
   type WeMpRssArticle,
 } from "@/lib/wemprss";
-import { CATEGORIES, categorizeArticle } from "@/app/api/wechat/articles/route";
+import { categorizeArticle, extractDescription, formatDate } from "@/lib/wechat-categories";
 
 const CRON_SECRET = process.env.CRON_SECRET || "";
 const DEFAULT_MP_NAME = "锦秋集";
@@ -22,22 +22,6 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = supabaseUrl && supabaseKey 
   ? createClient(supabaseUrl, supabaseKey)
   : null;
-
-function formatDate(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
-function extractDescription(content: string, maxLength = 200): string {
-  if (!content) return "";
-  const text = content.replace(/<[^>]+>/g, "").trim();
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + "...";
-}
 
 export async function GET(request: Request) {
   const startTime = Date.now();
