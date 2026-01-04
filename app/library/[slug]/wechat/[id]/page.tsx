@@ -108,14 +108,15 @@ export default function WechatArticlePage() {
       .replace(/src="(https?:\/\/mmbiz\.wpimg\.cn[^"]+)"/gi, (match, url) => {
         return `src="${proxyImage(url)}"`
       })
-      // 将 <a imgurl="..."> 转换为实际图片（也通过代理）
+      // 将 <a imgurl="..."> 转换为实际图片（推荐阅读区域的小图）
       .replace(/<a([^>]*)imgurl="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi, (match, p1, imgurl, p3, innerContent) => {
         // 如果内部已有内容，保留原样；否则添加图片
         if (innerContent && innerContent.trim()) {
           return match
         }
         const proxiedUrl = proxyImage(imgurl)
-        return `<a${p1}${p3}><img src="${proxiedUrl}" style="max-width:100%;border-radius:8px;margin:8px 0;" /></a>`
+        // 推荐阅读的图片设置为较小尺寸
+        return `<a${p1}${p3} class="recommend-link"><img src="${proxiedUrl}" class="recommend-img" /></a>`
       })
     
     return cleaned
@@ -260,6 +261,17 @@ export default function WechatArticlePage() {
         }
         .wechat-article-content section {
           margin: 16px 0;
+        }
+        /* 推荐阅读区域的图片 - 较小尺寸 */
+        .wechat-article-content .recommend-link {
+          display: inline-block;
+          margin: 4px 0;
+        }
+        .wechat-article-content .recommend-img {
+          max-width: 200px !important;
+          height: auto !important;
+          margin: 4px 0 !important;
+          border-radius: 4px !important;
         }
       `}</style>
 

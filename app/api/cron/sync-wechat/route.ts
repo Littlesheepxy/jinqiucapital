@@ -1,68 +1,47 @@
 /**
  * 定时同步微信公众号文章
  * 
- * Vercel Cron Job - 每天自动抓取最新文章
+ * Vercel Cron Job - 每天自动抓取最新文章并保存到 Supabase
  * 配置在 vercel.json 中
  */
 
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import {
+  getArticlesByMpName,
+  type WeMpRssArticle,
+} from "@/lib/wemprss";
+import { CATEGORIES, categorizeArticle } from "@/app/api/wechat/articles/route";
 
-const WEMPRSS_URL = process.env.WEMPRSS_URL || "http://81.70.105.204:8001";
-const WEMPRSS_USERNAME = process.env.WEMPRSS_USERNAME || "";
-const WEMPRSS_PASSWORD = process.env.WEMPRSS_PASSWORD || "";
 const CRON_SECRET = process.env.CRON_SECRET || "";
+const DEFAULT_MP_NAME = "锦秋集";
 
-// Token 缓存
-let cachedToken: string | null = null;
-let tokenExpiry: number = 0;
+// Supabase 客户端
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseKey 
+  ? createClient(supabaseUrl, supabaseKey)
+  : null;
 
-async function login(): Promise<string> {
-  const endpoints = ["/api/v1/wx/auth/login", "/api/v1/login"];
-  
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: WEMPRSS_USERNAME,
-          password: WEMPRSS_PASSWORD,
-        }),
-      });
-
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (data.detail || data.error) continue;
-      
-      const token = data.access_token || data.data?.access_token;
-      if (token) return token;
-    } catch {
-      continue;
-    }
-  }
-  throw new Error("无法登录 We-MP-RSS");
-}
-
-async function getValidToken(): Promise<string> {
-  if (cachedToken && tokenExpiry > Date.now()) {
-    return cachedToken;
-  }
-  cachedToken = await login();
-  tokenExpiry = Date.now() + (3 * 24 - 1) * 60 * 60 * 1000;
-  return cachedToken;
-}
-
-async function fetchWithAuth(endpoint: string): Promise<Response> {
-  const token = await getValidToken();
-  return fetch(`${WEMPRSS_URL}${endpoint}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
+function extractDescription(content: string, maxLength = 200): string {
+  if (!content) return "";
+  const text = content.replace(/<[^>]+>/g, "").trim();
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + "...";
+}
+
 export async function GET(request: Request) {
+  const startTime = Date.now();
+  
   try {
     // 验证 Cron Secret（防止未授权调用）
     const authHeader = request.headers.get("authorization");
@@ -70,60 +49,95 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("[Cron] 开始同步微信公众号文章...");
+    console.log("[Cron] 开始同步微信公众号文章到数据库...");
 
-    // 获取所有公众号
-    const feedsResponse = await fetchWithAuth("/mps?limit=100");
-    const feedsData = await feedsResponse.json();
-    const feeds = feedsData.data?.list || [];
-
-    if (feeds.length === 0) {
+    if (!supabase) {
       return NextResponse.json({
         success: false,
-        message: "没有找到已订阅的公众号",
-      });
+        error: "Supabase 未配置",
+        timestamp: new Date().toISOString(),
+      }, { status: 500 });
     }
 
-    // 触发每个公众号更新（只抓取最新 1 页）
-    const results = [];
-    for (const feed of feeds) {
-      try {
-        const updateResponse = await fetchWithAuth(
-          `/mps/update/${feed.id}?start_page=0&end_page=1`
-        );
-        const updateData = await updateResponse.json();
-        
-        results.push({
-          id: feed.id,
-          name: feed.mp_name,
-          success: updateResponse.ok,
-          articlesFound: updateData.data?.total || 0,
+    // 从 We-MP-RSS 获取文章
+    const result = await getArticlesByMpName(DEFAULT_MP_NAME, 200, 0);
+
+    if (!result.feed) {
+      return NextResponse.json({
+        success: false,
+        error: `未找到公众号: ${DEFAULT_MP_NAME}`,
+        timestamp: new Date().toISOString(),
+      }, { status: 404 });
+    }
+
+    const articles = result.articles;
+    console.log(`[Cron] 从 We-MP-RSS 获取到 ${articles.length} 篇文章`);
+
+    // 获取已存在的文章 ID
+    const { data: existing } = await supabase
+      .from("wechat_articles")
+      .select("id");
+    const existingIds = new Set(existing?.map(row => row.id) || []);
+
+    // 准备要保存的文章
+    const rows = articles.map((article: WeMpRssArticle) => ({
+      id: article.id,
+      title: article.title,
+      description: article.description || extractDescription(article.content),
+      content: article.content,
+      url: article.url,
+      cover_image: article.pic_url,
+      publish_time: article.publish_time,
+      publish_date: formatDate(article.publish_time),
+      mp_name: article.mp_name || result.feed?.mp_name,
+      category: categorizeArticle(article),
+    }));
+
+    // 过滤出新文章
+    const newRows = rows.filter(row => !existingIds.has(row.id));
+
+    // 统计分类
+    const categoryStats: Record<string, number> = {};
+    newRows.forEach(row => {
+      const cat = row.category || "uncategorized";
+      categoryStats[cat] = (categoryStats[cat] || 0) + 1;
+    });
+
+    // 保存新文章到数据库
+    if (newRows.length > 0) {
+      const { error } = await supabase
+        .from("wechat_articles")
+        .upsert(newRows, { 
+          onConflict: "id",
+          ignoreDuplicates: false,
         });
 
-        // 避免请求过快
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (err) {
-        results.push({
-          id: feed.id,
-          name: feed.mp_name,
-          success: false,
-          error: err instanceof Error ? err.message : "失败",
-        });
+      if (error) {
+        throw new Error(`保存文章失败: ${error.message}`);
       }
+
+      console.log(`[Cron] 已保存 ${newRows.length} 篇新文章到数据库`);
+    } else {
+      console.log("[Cron] 没有新文章需要保存");
     }
 
-    const successCount = results.filter(r => r.success).length;
-    console.log(`[Cron] 同步完成: ${successCount}/${results.length} 成功`);
+    const duration = Date.now() - startTime;
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
-      results,
-      summary: {
-        total: results.length,
-        success: successCount,
-        failed: results.length - successCount,
+      duration: `${duration}ms`,
+      data: {
+        feed: {
+          id: result.feed.id,
+          name: result.feed.mp_name,
+        },
+        totalFetched: articles.length,
+        existingArticles: existingIds.size,
+        newArticles: newRows.length,
+        categoryStats,
       },
+      message: `同步完成！获取 ${articles.length} 篇，新增 ${newRows.length} 篇`,
     });
   } catch (error) {
     console.error("[Cron] 同步失败:", error);
@@ -131,7 +145,7 @@ export async function GET(request: Request) {
       success: false,
       error: error instanceof Error ? error.message : "同步失败",
       timestamp: new Date().toISOString(),
+      duration: `${Date.now() - startTime}ms`,
     }, { status: 500 });
   }
 }
-
