@@ -2,7 +2,7 @@
  * 微信公众号文章 API
  * 
  * 从 We-MP-RSS 服务获取锦秋集的文章
- * 支持按分类/栏目筛选
+ * 支持按分类/栏目筛选，支持获取所有分类
  */
 
 import { NextResponse } from "next/server";
@@ -17,14 +17,59 @@ import {
 // 默认获取的公众号名称
 const DEFAULT_MP_NAME = "锦秋集";
 
-// 栏目关键词映射（slug -> 搜索关键词）
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  "jinqiu-select": ["精选", "Select", "报告", "研究"],
-  "jinqiu-scan": ["扫描", "Scan", "测评", "产品"],
-  "jinqiu-spotlight": ["Spotlight", "聚光", "创业者"],
-  "jinqiu-roundtable": ["小饭桌", "Roundtable", "饭局"],
-  "jinqiu-summit": ["锦秋会", "Summit", "峰会"],
+// 栏目配置（slug -> 配置）
+const CATEGORIES: Record<string, { name: { zh: string; en: string }; keywords: string[] }> = {
+  "jinqiu-select": {
+    name: { zh: "Jinqiu Select", en: "Jinqiu Select" },
+    keywords: ["精选", "Select", "报告", "研究", "解读"],
+  },
+  "jinqiu-scan": {
+    name: { zh: "Jinqiu Scan", en: "Jinqiu Scan" },
+    keywords: ["扫描", "Scan", "测评", "产品", "工具"],
+  },
+  "jinqiu-spotlight": {
+    name: { zh: "Jinqiu Spotlight", en: "Jinqiu Spotlight" },
+    keywords: ["Spotlight", "聚光", "创业者", "专访"],
+  },
+  "jinqiu-roundtable": {
+    name: { zh: "锦秋小饭桌", en: "Jinqiu Roundtable" },
+    keywords: ["小饭桌", "Roundtable", "饭局", "聚餐"],
+  },
+  "jinqiu-summit": {
+    name: { zh: "锦秋会", en: "Jinqiu Summit" },
+    keywords: ["锦秋会", "Summit", "峰会", "大会"],
+  },
 };
+
+// 文章分类函数
+function categorizeArticle(article: WeMpRssArticle): string | null {
+  const title = article.title?.toLowerCase() || "";
+  const content = (article.content?.substring(0, 500) || "").toLowerCase();
+  
+  for (const [slug, config] of Object.entries(CATEGORIES)) {
+    if (config.keywords.some(kw => 
+      title.includes(kw.toLowerCase()) || content.includes(kw.toLowerCase())
+    )) {
+      return slug;
+    }
+  }
+  return null; // 未分类
+}
+
+// 格式化单篇文章
+function formatArticle(article: WeMpRssArticle, feedName?: string) {
+  return {
+    id: article.id,
+    title: article.title,
+    description: article.description || extractDescription(article.content),
+    content: article.content,
+    url: article.url,
+    coverImage: article.pic_url,
+    publishTime: article.publish_time,
+    publishDate: formatDate(article.publish_time),
+    mpName: article.mp_name || feedName,
+  };
+}
 
 export async function GET(request: Request) {
   try {
@@ -35,6 +80,7 @@ export async function GET(request: Request) {
     const action = searchParams.get("action");
     const category = searchParams.get("category"); // 栏目 slug
     const search = searchParams.get("search"); // 自定义搜索词
+    const grouped = searchParams.get("grouped") === "true"; // 是否分组返回
 
     // 获取所有公众号列表
     if (action === "feeds") {
@@ -45,8 +91,16 @@ export async function GET(request: Request) {
       });
     }
 
-    // 获取指定公众号的文章
-    const result = await getArticlesByMpName(mpName, 100, 0); // 先获取更多文章用于筛选
+    // 获取分类配置
+    if (action === "categories") {
+      return NextResponse.json({
+        success: true,
+        data: CATEGORIES,
+      });
+    }
+
+    // 获取指定公众号的所有文章
+    const result = await getArticlesByMpName(mpName, 200, 0); // 获取更多文章
 
     if (!result.feed) {
       return NextResponse.json({
@@ -56,14 +110,58 @@ export async function GET(request: Request) {
       }, { status: 404 });
     }
 
-    let filteredArticles = result.articles;
+    // 按时间倒序排序
+    const sortedArticles = [...result.articles].sort((a, b) => 
+      (b.publish_time || 0) - (a.publish_time || 0)
+    );
 
-    // 按栏目筛选
-    if (category && CATEGORY_KEYWORDS[category]) {
-      const keywords = CATEGORY_KEYWORDS[category];
-      filteredArticles = result.articles.filter((article: WeMpRssArticle) => {
+    // 如果请求分组返回所有分类
+    if (grouped) {
+      const categorizedArticles: Record<string, any[]> = {};
+      const uncategorized: any[] = [];
+
+      // 初始化所有分类
+      Object.keys(CATEGORIES).forEach(slug => {
+        categorizedArticles[slug] = [];
+      });
+
+      // 分类文章
+      sortedArticles.forEach((article: WeMpRssArticle) => {
+        const categorySlug = categorizeArticle(article);
+        const formatted = formatArticle(article, result.feed?.mp_name);
+        
+        if (categorySlug) {
+          categorizedArticles[categorySlug].push(formatted);
+        } else {
+          uncategorized.push(formatted);
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          feed: {
+            id: result.feed.id,
+            name: result.feed.mp_name,
+            cover: result.feed.mp_cover,
+            intro: result.feed.mp_intro,
+          },
+          categories: CATEGORIES,
+          articles: categorizedArticles,
+          uncategorized,
+          totalArticles: sortedArticles.length,
+        },
+      });
+    }
+
+    // 按单个栏目筛选
+    let filteredArticles = sortedArticles;
+
+    if (category && CATEGORIES[category]) {
+      const keywords = CATEGORIES[category].keywords;
+      filteredArticles = sortedArticles.filter((article: WeMpRssArticle) => {
         const title = article.title?.toLowerCase() || "";
-        const content = article.content?.toLowerCase() || "";
+        const content = (article.content?.substring(0, 500) || "").toLowerCase();
         return keywords.some(kw => 
           title.includes(kw.toLowerCase()) || content.includes(kw.toLowerCase())
         );
@@ -84,18 +182,10 @@ export async function GET(request: Request) {
     const total = filteredArticles.length;
     const paginatedArticles = filteredArticles.slice(offset, offset + limit);
 
-    // 转换文章格式，适配前端显示
-    const articles = paginatedArticles.map((article: WeMpRssArticle) => ({
-      id: article.id,
-      title: article.title,
-      description: article.description || extractDescription(article.content),
-      content: article.content,
-      url: article.url,
-      coverImage: article.pic_url,
-      publishTime: article.publish_time,
-      publishDate: formatDate(article.publish_time),
-      mpName: article.mp_name || result.feed?.mp_name,
-    }));
+    // 转换文章格式
+    const articles = paginatedArticles.map((article: WeMpRssArticle) => 
+      formatArticle(article, result.feed?.mp_name)
+    );
 
     return NextResponse.json({
       success: true,

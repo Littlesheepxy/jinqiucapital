@@ -11,6 +11,7 @@ interface WechatArticle {
   url: string
   coverImage?: string
   publishDate: string
+  publishTime: number
 }
 
 export default function LibraryItemPage() {
@@ -174,10 +175,8 @@ export default function LibraryItemPage() {
                       paddingBottom: "20px",
                     }}
                   >
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={`/library/${slug}/wechat/${article.id}`}
                       style={{ 
                         textDecoration: "none",
                         color: "inherit",
@@ -235,7 +234,7 @@ export default function LibraryItemPage() {
                           </div>
                         )}
                       </div>
-                    </a>
+                    </Link>
                   </article>
                 ))}
               </div>
