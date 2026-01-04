@@ -14,7 +14,25 @@
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-## 环境变量配置
+---
+
+## 🚀 快速开始
+
+### 第一步：在 We-MP-RSS 后台订阅公众号
+
+1. **访问 We-MP-RSS 后台**
+   ```
+   http://81.70.105.204:8001
+   ```
+
+2. **登录后，搜索并添加「锦秋集」公众号**
+   - 点击左侧"添加订阅"
+   - 搜索"锦秋集"
+   - 点击订阅按钮
+
+3. **首次订阅会自动抓取历史文章**（默认 5 页，约 50 篇）
+
+### 第二步：配置环境变量
 
 在 `.env.local` 文件中添加以下配置：
 
@@ -22,10 +40,95 @@
 # We-MP-RSS 服务地址
 WEMPRSS_URL=http://81.70.105.204:8001
 
-# We-MP-RSS 登录凭证
+# We-MP-RSS 登录凭证（与后台登录相同）
 WEMPRSS_USERNAME=your_username
 WEMPRSS_PASSWORD=your_password
+
+# Cron Job 密钥（可选，用于保护定时任务）
+CRON_SECRET=your_random_secret_string
 ```
+
+### 第三步：验证配置
+
+```bash
+# 启动开发服务器
+npm run dev
+
+# 测试 API - 查看已订阅的公众号
+curl http://localhost:3000/api/wechat/sync
+
+# 测试 API - 获取文章列表
+curl http://localhost:3000/api/wechat/articles
+```
+
+---
+
+## 📡 手动同步文章
+
+### 方式一：通过 API 触发
+
+```bash
+# 查看已订阅的公众号
+curl http://localhost:3000/api/wechat/sync
+
+# 触发所有公众号同步（抓取最新 1 页）
+curl -X POST http://localhost:3000/api/wechat/sync \
+  -H "Content-Type: application/json" \
+  -d '{"pages": 1}'
+
+# 触发指定公众号同步（抓取最新 3 页）
+curl -X POST http://localhost:3000/api/wechat/sync \
+  -H "Content-Type: application/json" \
+  -d '{"mpId": "MP_WXS_xxx", "pages": 3}'
+```
+
+### 方式二：在 We-MP-RSS 后台操作
+
+1. 访问 http://81.70.105.204:8001
+2. 找到「锦秋集」公众号
+3. 点击"更新"按钮
+
+---
+
+## ⏰ 定时同步（Vercel Cron）
+
+已配置 Vercel Cron Job，**每天早上 8 点自动同步最新文章**。
+
+### 配置文件
+
+`vercel.json`:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-wechat",
+      "schedule": "0 8 * * *"
+    }
+  ]
+}
+```
+
+### 修改定时频率
+
+| 频率 | Cron 表达式 |
+|------|------------|
+| 每天 8:00 | `0 8 * * *` |
+| 每 6 小时 | `0 */6 * * *` |
+| 每小时 | `0 * * * *` |
+| 每天 8:00 和 20:00 | `0 8,20 * * *` |
+
+### 手动触发 Cron
+
+```bash
+# 本地测试
+curl http://localhost:3000/api/cron/sync-wechat
+
+# 生产环境（需要 CRON_SECRET）
+curl -H "Authorization: Bearer your_cron_secret" \
+  https://your-domain.vercel.app/api/cron/sync-wechat
+```
+
+---
 
 ## 栏目与文章分类
 
