@@ -171,9 +171,7 @@ export default function LibraryItemPage() {
                     }}
                   >
                     <Link
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/library/${slug}/wechat/${article.id}`}
                       style={{ 
                         textDecoration: "none",
                         color: "inherit",
