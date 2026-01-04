@@ -154,85 +154,55 @@ export default function LibraryItemPage() {
         />
       )}
 
-      {/* 微信公众号文章（来自锦秋集） */}
+      {/* 微信公众号文章 */}
       {(hasWechatArticles || wechatLoading) && (
         <>
-          <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "32px 0" }} />
-          <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "20px", color: "#333" }}>
-            {lang === "zh" ? "📱 来自「锦秋集」公众号" : "📱 From WeChat Official Account"}
-          </h3>
-          
           {wechatLoading && wechatArticles.length === 0 ? (
             <p style={{ color: "#666" }}>{lang === "zh" ? "加载中..." : "Loading..."}</p>
           ) : (
             <>
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {wechatArticles.map((article) => (
                   <article 
                     key={article.id}
                     style={{
                       borderBottom: "1px solid #eee",
-                      paddingBottom: "20px",
+                      paddingBottom: "16px",
                     }}
                   >
                     <Link
-                      href={`/library/${slug}/wechat/${article.id}`}
+                      href={article.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{ 
                         textDecoration: "none",
                         color: "inherit",
                         display: "block",
                       }}
                     >
-                      <div style={{ display: "flex", gap: "16px" }}>
-                        <div style={{ flex: 1 }}>
-                          <h4 style={{ 
-                            fontSize: "16px", 
-                            fontWeight: "600", 
-                            marginBottom: "6px",
-                            color: "#225BBA",
-                            lineHeight: "1.4"
-                          }}>
-                            {article.title}
-                          </h4>
-                          <p style={{ 
-                            fontSize: "14px", 
-                            color: "#666",
-                            marginBottom: "6px",
-                            lineHeight: "1.5",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}>
-                            {article.description}
-                          </p>
-                          <div style={{ fontSize: "12px", color: "#999" }}>
-                            {article.publishDate}
-                          </div>
-                        </div>
-                        {article.coverImage && (
-                          <div style={{ 
-                            width: "100px", 
-                            height: "70px",
-                            flexShrink: 0,
-                            borderRadius: "4px",
-                            overflow: "hidden",
-                            background: "#f5f5f5"
-                          }}>
-                            <img 
-                              src={article.coverImage}
-                              alt={article.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = "none"
-                              }}
-                            />
-                          </div>
-                        )}
+                      <h4 style={{ 
+                        fontSize: "15px", 
+                        fontWeight: "500", 
+                        marginBottom: "4px",
+                        color: "#225BBA",
+                        lineHeight: "1.4"
+                      }}>
+                        {article.title}
+                      </h4>
+                      <p style={{ 
+                        fontSize: "13px", 
+                        color: "#666",
+                        marginBottom: "4px",
+                        lineHeight: "1.5",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}>
+                        {article.description}
+                      </p>
+                      <div style={{ fontSize: "12px", color: "#999" }}>
+                        {article.publishDate}
                       </div>
                     </Link>
                   </article>
