@@ -102,8 +102,7 @@ export default function LibraryItemPage() {
   const lang = language
   const brandName = contentData.settings.brandName[lang]
 
-  // 判断是否有静态文章或微信文章
-  const hasStaticArticles = currentItem.articles && currentItem.articles.length > 0
+  // 判断是否有微信文章
   const hasWechatArticles = wechatArticles.length > 0
 
   return (
@@ -235,30 +234,8 @@ export default function LibraryItemPage() {
         </>
       )}
 
-      {/* 静态配置的文章列表 */}
-      {hasStaticArticles && (
-        <>
-          <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "32px 0" }} />
-          <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "20px", color: "#333" }}>
-            {lang === "zh" ? "📄 精选文章" : "📄 Featured Articles"}
-          </h3>
-          <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-            {currentItem.articles.map((article: any, i: number) => (
-              <li key={i} style={{ marginBottom: "8px" }}>
-                <Link
-                  href={`/library/${slug}/${article.slug}`}
-                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-                >
-                  {article.title[lang]}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
       {/* 如果没有任何文章 */}
-      {!hasStaticArticles && !hasWechatArticles && !wechatLoading && (
+      {!hasWechatArticles && !wechatLoading && (
         <p style={{ color: "#666", marginTop: "20px" }}>
           {lang === "zh" ? "暂无文章，敬请期待..." : "No articles yet, stay tuned..."}
         </p>
