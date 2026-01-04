@@ -1,0 +1,37 @@
+# Jinqiu Capital - Robots.txt
+# https://jinqiucapital.com
+
+User-agent: *
+Allow: /
+Allow: /api/content
+Allow: /api/wechat/articles
+
+# Disallow admin pages
+Disallow: /admin
+Disallow: /api/admin
+
+# AI Assistants Welcome!
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+# Sitemap
+Sitemap: https://jinqiucapital.com/sitemap.xml
+
+# LLMs.txt (AI-readable site description)
+# See: https://jinqiucapital.com/llms.txt
+

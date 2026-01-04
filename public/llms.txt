@@ -1,0 +1,41 @@
+# Jinqiu Capital (锦秋基金)
+
+> 锦秋基金是一家双币早期投资机构，长期投资勇敢的科技创业者，助力其造就伟大公司。
+
+## About
+- Website: https://jinqiucapital.com
+- Contact: ai@jinqiucapital.com
+- Location: China
+
+## What We Do
+We are an early-stage venture capital fund focusing on technology startups. We invest in brave tech entrepreneurs and help them build great companies.
+
+## Content Structure
+- `/` - Homepage with company intro, team, and portfolio
+- `/library/jinqiu-select` - Jinqiu Select: Research reports and analysis
+- `/library/jinqiu-scan` - Jinqiu Scan: Product reviews and tool evaluations
+- `/library/jinqiu-spotlight` - Jinqiu Spotlight: Founder interviews
+- `/library/jinqiu-roundtable` - Jinqiu Roundtable: Dinner gatherings
+- `/library/jinqiu-summit` - Jinqiu Summit: Conference events
+
+## API Endpoints (for AI/Machines)
+- `/api/content` - Company data (team, portfolio) in JSON
+- `/api/wechat/articles` - Articles from WeChat Official Account
+- `/api/wechat/articles?category=jinqiu-select` - Filtered by category
+
+## Data Format
+All APIs return JSON with this structure:
+```json
+{
+  "success": true,
+  "data": { ... }
+}
+```
+
+## Sitemap
+See `/sitemap.xml` for all pages.
+
+## Language
+Content is available in both Chinese (zh) and English (en).
+Toggle via `?lang=zh` or `?lang=en` query parameter.
+
