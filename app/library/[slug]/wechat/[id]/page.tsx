@@ -76,16 +76,49 @@ export default function WechatArticlePage() {
     setLanguage(language === "zh" ? "en" : "zh")
   }
 
+  // 通过代理加载微信图片（绕过防盗链）
+  const proxyImage = (url: string) => {
+    if (!url) return url
+    // 微信图片通过 weserv.nl 代理加载
+    if (url.includes('mmbiz.qpic.cn') || url.includes('mmbiz.wpimg.cn')) {
+      // 移除协议前缀
+      const cleanUrl = url.replace(/^https?:\/\//, '')
+      return `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`
+    }
+    return url
+  }
+
   // 清理并渲染 HTML 内容
   const cleanHtml = (html: string) => {
     if (!html) return ""
     
-    // 只移除危险的标签，保留其他内容包括图片
-    return html
+    let cleaned = html
+      // 移除危险标签
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/on\w+="[^"]*"/gi, '') // 移除事件处理器
-      .replace(/javascript:/gi, '') // 移除 javascript: 链接
+      .replace(/on\w+="[^"]*"/gi, '')
+      .replace(/javascript:/gi, '')
+      // 修复微信表情图片尺寸
+      .replace(/(<img[^>]*class="[^"]*wxw-img[^"]*"[^>]*)style="[^"]*width:\s*\d+px[^"]*"([^>]*>)/gi, 
+        '$1style="display:inline-block;width:20px;height:20px;vertical-align:middle;"$2')
+      // 将微信图片 URL 通过代理加载
+      .replace(/src="(https?:\/\/mmbiz\.qpic\.cn[^"]+)"/gi, (match, url) => {
+        return `src="${proxyImage(url)}"`
+      })
+      .replace(/src="(https?:\/\/mmbiz\.wpimg\.cn[^"]+)"/gi, (match, url) => {
+        return `src="${proxyImage(url)}"`
+      })
+      // 将 <a imgurl="..."> 转换为实际图片（也通过代理）
+      .replace(/<a([^>]*)imgurl="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi, (match, p1, imgurl, p3, innerContent) => {
+        // 如果内部已有内容，保留原样；否则添加图片
+        if (innerContent && innerContent.trim()) {
+          return match
+        }
+        const proxiedUrl = proxyImage(imgurl)
+        return `<a${p1}${p3}><img src="${proxiedUrl}" style="max-width:100%;border-radius:8px;margin:8px 0;" /></a>`
+      })
+    
+    return cleaned
   }
 
   const lang = language
@@ -170,13 +203,27 @@ export default function WechatArticlePage() {
       <div style={{ 
         fontSize: "14px", 
         color: "#666", 
-        marginBottom: "32px",
+        marginBottom: "24px",
         display: "flex",
         gap: "16px",
-        alignItems: "center"
+        alignItems: "center",
+        flexWrap: "wrap"
       }}>
         <span>{article.publishDate}</span>
         <span>来源：{article.mpName}</span>
+        {article.url && (
+          <a 
+            href={article.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ 
+              color: "#225BBA", 
+              textDecoration: "none"
+            }}
+          >
+            查看原文
+          </a>
+        )}
       </div>
 
       {/* Article Content */}
@@ -215,24 +262,6 @@ export default function WechatArticlePage() {
           margin: 16px 0;
         }
       `}</style>
-
-      {/* View Original Link */}
-      {article.url && (
-        <div style={{ marginBottom: "40px" }}>
-          <a 
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ 
-              color: "#225BBA", 
-              textDecoration: "none",
-              fontSize: "14px"
-            }}
-          >
-            📖 查看微信原文 →
-          </a>
-        </div>
-      )}
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
 
