@@ -243,7 +243,7 @@ export default function AdminPage() {
             setTimeout(() => setMessage(''), 5000)
           } else {
             clearLocalDraft()
-            loadData()
+        loadData()
           }
         } else {
           loadData()
@@ -267,8 +267,8 @@ export default function AdminPage() {
     if (isAutoSave) {
       setAutoSaving(true)
     } else {
-      setSaving(true)
-      setMessage("")
+    setSaving(true)
+    setMessage("")
     }
 
     try {
@@ -294,9 +294,9 @@ export default function AdminPage() {
         
         // 保存成功后清除本地草稿
         clearLocalDraft()
-        
+          
         // 重新加载数据以同步主页
-        await loadData()
+          await loadData()
         
         if (!isAutoSave) {
           // 根据返回的消息判断保存方式
@@ -306,7 +306,7 @@ export default function AdminPage() {
               saveMethod = 'Supabase 数据库'
               if (result.versions) {
                 setMessage(`✓ 保存成功！版本: content v${result.versions.content}, team v${result.versions.team}`)
-              } else {
+        } else {
                 setMessage(`✓ 保存成功到 ${saveMethod}！`)
               }
             } else if (result.message.includes('file system')) {
@@ -317,29 +317,29 @@ export default function AdminPage() {
             }
           } else {
             setMessage(`✓ 保存成功到 ${saveMethod}！`)
-          }
-          
-          setTimeout(() => setMessage(""), 5000)
+        }
+        
+        setTimeout(() => setMessage(""), 5000)
         }
       } else {
         if (!isAutoSave) {
-          const errorDetails = result.details ? `: ${result.details}` : ''
-          setMessage(`❌ 保存失败${errorDetails}`)
-          console.error('Save failed:', result)
+        const errorDetails = result.details ? `: ${result.details}` : ''
+        setMessage(`❌ 保存失败${errorDetails}`)
+        console.error('Save failed:', result)
         }
       }
     } catch (error) {
       console.error('Save error:', error)
       if (!isAutoSave) {
-        setMessage(`❌ 保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
+      setMessage(`❌ 保存失败: ${error instanceof Error ? error.message : '未知错误'}`)
       }
     } finally {
       if (isAutoSave) {
         setAutoSaving(false)
       } else {
-        setSaving(false)
-      }
+      setSaving(false)
     }
+  }
   }
 
   // 手动保存
@@ -1020,36 +1020,36 @@ export default function AdminPage() {
                   <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
                     📌 项目信息
                   </h4>
-                  <div style={{ display: "grid", gap: "12px" }}>
-                    <input
-                      type="text"
-                      placeholder="项目名称（中文）"
-                      value={item.name.zh}
-                      onChange={(e) => updatePortfolioItem(index, "zh", "name", e.target.value)}
-                      style={{
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <input
+                    type="text"
+                    placeholder="项目名称（中文）"
+                    value={item.name.zh}
+                    onChange={(e) => updatePortfolioItem(index, "zh", "name", e.target.value)}
+                    style={{
                         padding: "10px",
-                        border: "1px solid #ddd",
+                      border: "1px solid #ddd",
                         borderRadius: "4px",
                         fontSize: "14px"
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="项目名称（英文）"
-                      value={item.name.en}
-                      onChange={(e) => updatePortfolioItem(index, "en", "name", e.target.value)}
-                      style={{
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="项目名称（英文）"
+                    value={item.name.en}
+                    onChange={(e) => updatePortfolioItem(index, "en", "name", e.target.value)}
+                    style={{
                         padding: "10px",
-                        border: "1px solid #ddd",
+                      border: "1px solid #ddd",
                         borderRadius: "4px",
                         fontSize: "14px"
-                      }}
-                    />
-                    <input
-                      type="text"
+                    }}
+                  />
+                  <input
+                    type="text"
                       placeholder="项目官网链接（选填）"
-                      value={item.link || ""}
-                      onChange={(e) => updatePortfolioItem(index, "", "link", e.target.value)}
+                    value={item.link || ""}
+                    onChange={(e) => updatePortfolioItem(index, "", "link", e.target.value)}
                       style={{
                         padding: "10px",
                         border: "1px solid #ddd",
@@ -1119,13 +1119,13 @@ export default function AdminPage() {
                             placeholder="创始人姓名（中文）"
                             value={founder.name.zh}
                             onChange={(e) => updatePortfolioFounder(index, founderIndex, "zh", "name", e.target.value)}
-                            style={{
-                              padding: "8px",
-                              border: "1px solid #ddd",
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
                               borderRadius: "4px",
                               fontSize: "13px"
-                            }}
-                          />
+                    }}
+                  />
                           <input
                             type="text"
                             placeholder="创始人姓名（英文）"
@@ -1298,7 +1298,7 @@ export default function AdminPage() {
                 borderBottom: "2px solid #e0e0e0",
                 flexWrap: "wrap"
               }}>
-                {contentData.research.list.map((item: any, index: number) => (
+            {contentData.research.list.map((item: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => setActiveResearchIndex(index)}
@@ -1362,47 +1362,47 @@ export default function AdminPage() {
                   <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
                     📌 基本信息
                   </h4>
-                  <div style={{ display: "grid", gap: "12px" }}>
-                    <input
-                      type="text"
-                      placeholder="名称（中文）"
-                      value={item.name.zh}
-                      onChange={(e) => updateResearch(index, "zh", "name", e.target.value)}
-                      style={{
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <input
+                    type="text"
+                    placeholder="名称（中文）"
+                    value={item.name.zh}
+                    onChange={(e) => updateResearch(index, "zh", "name", e.target.value)}
+                    style={{
                         padding: "10px",
-                        border: "1px solid #ddd",
+                      border: "1px solid #ddd",
                         borderRadius: "4px",
                         fontSize: "14px"
-                      }}
-                    />
-                    <input
-                      type="text"
-                      placeholder="名称（英文）"
-                      value={item.name.en}
-                      onChange={(e) => updateResearch(index, "en", "name", e.target.value)}
-                      style={{
+                    }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="名称（英文）"
+                    value={item.name.en}
+                    onChange={(e) => updateResearch(index, "en", "name", e.target.value)}
+                    style={{
                         padding: "10px",
-                        border: "1px solid #ddd",
+                      border: "1px solid #ddd",
                         borderRadius: "4px",
                         fontSize: "14px"
-                      }}
-                    />
-                    <textarea
+                    }}
+                  />
+                  <textarea
                       placeholder="简短描述（中文）- 显示在列表"
-                      value={item.desc.zh}
-                      onChange={(e) => updateResearch(index, "zh", "desc", e.target.value)}
-                      style={{
+                    value={item.desc.zh}
+                    onChange={(e) => updateResearch(index, "zh", "desc", e.target.value)}
+                    style={{
                         padding: "10px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
                         minHeight: "60px",
                         fontSize: "14px"
-                      }}
-                    />
-                    <textarea
+                    }}
+                  />
+                  <textarea
                       placeholder="简短描述（英文）- 显示在列表"
-                      value={item.desc.en}
-                      onChange={(e) => updateResearch(index, "en", "desc", e.target.value)}
+                    value={item.desc.en}
+                    onChange={(e) => updateResearch(index, "en", "desc", e.target.value)}
                       style={{
                         padding: "10px",
                         border: "1px solid #ddd",
@@ -1559,25 +1559,25 @@ export default function AdminPage() {
                                   placeholder="文章标题（中文）"
                                   value={article.title?.zh || ""}
                                   onChange={(e) => updateArticle(index, articleIndex, "zh", "title", e.target.value)}
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "4px",
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
                                     fontSize: "13px"
-                                  }}
-                                />
-                                <input
-                                  type="text"
+                    }}
+                  />
+                  <input
+                    type="text"
                                   placeholder="文章标题（英文）"
                                   value={article.title?.en || ""}
                                   onChange={(e) => updateArticle(index, articleIndex, "en", "title", e.target.value)}
-                                  style={{
-                                    padding: "8px",
-                                    border: "1px solid #ddd",
+                    style={{
+                      padding: "8px",
+                      border: "1px solid #ddd",
                                     borderRadius: "4px",
                                     fontSize: "13px"
-                                  }}
-                                />
+                    }}
+                  />
                                 <input
                                   type="text"
                                   placeholder="文章URL Slug（英文，如: article-1）"
@@ -1594,7 +1594,7 @@ export default function AdminPage() {
                                 {item.slug && article.slug && (
                                   <div style={{ fontSize: "11px", color: "#666", fontStyle: "italic" }}>
                                     文章链接: /library/{item.slug}/{article.slug}
-                                  </div>
+                </div>
                                 )}
                               </div>
 
@@ -2095,9 +2095,9 @@ export default function AdminPage() {
                                         borderBottom: i < changes.length - 1 ? "1px solid #e0e0e0" : "none"
                                       }}>
                                         {change}
-                                      </div>
-                                    ))}
-                                  </div>
+              </div>
+            ))}
+          </div>
                                 ) : (
                                   <div style={{ color: "#999", fontStyle: "italic" }}>
                                     {index === versionHistory.length - 1 ? "初始版本" : "无更改"}
@@ -2115,7 +2115,7 @@ export default function AdminPage() {
                                     • 项目: {version.content?.projects?.list?.length || 0} 个<br/>
                                     • 研究活动: {version.content?.research?.list?.length || 0} 个
                                   </div>
-                                </div>
+      </div>
                               </div>
                             )
                           })()}

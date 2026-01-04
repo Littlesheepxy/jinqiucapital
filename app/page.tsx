@@ -283,10 +283,10 @@ export default function Page() {
       </h2>
       <p style={{ marginBottom: "40px" }}>
         <a 
-          href="mailto:contact@jinqiucapital.com"
+          href="mailto:ai@jinqiucapital.com"
           style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
         >
-          contact@jinqiucapital.com
+          ai@jinqiucapital.com
         </a>
       </p>
 

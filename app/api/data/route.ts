@@ -8,7 +8,7 @@ export async function GET() {
       type: "AI-Native 双币早期投资机构",
       fund_period: "12年期基金",
       portfolio_count: "70+",
-      email: "contact@jinqiucapital.com",
+      email: "ai@jinqiucapital.com",
       website: "https://jinqiucapital.com"
     },
     focus_areas: [

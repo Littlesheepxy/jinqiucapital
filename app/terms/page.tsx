@@ -51,8 +51,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-bold mb-3">7. 联系方式</h2>
             <p className="text-muted-foreground">
               如有任何问题，请联系我们：
-              <a href="mailto:contact@jinqiucapital.com" className="text-primary hover:underline ml-1">
-                contact@jinqiucapital.com
+              <a href="mailto:ai@jinqiucapital.com" className="text-primary hover:underline ml-1">
+                ai@jinqiucapital.com
               </a>
             </p>
           </section>

@@ -27,7 +27,7 @@ export async function GET() {
           .order('version', { ascending: false })
           .limit(1)
           .single()
-
+        
         if (!contentError && !teamError) {
           console.log('✅ 从 Supabase 读取成功')
           return NextResponse.json({

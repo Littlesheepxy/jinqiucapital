@@ -42,8 +42,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-bold mb-3">5. 联系我们</h2>
             <p className="text-muted-foreground">
               如果您对本隐私政策有任何疑问，请通过 
-              <a href="mailto:contact@jinqiucapital.com" className="text-primary hover:underline ml-1">
-                contact@jinqiucapital.com
+              <a href="mailto:ai@jinqiucapital.com" className="text-primary hover:underline ml-1">
+                ai@jinqiucapital.com
               </a> 联系我们。
             </p>
           </section>

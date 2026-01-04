@@ -20,11 +20,11 @@ export async function GET(request: NextRequest) {
       console.log('📁 使用文件系统读取数据（Supabase 未配置）')
       const contentData = JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf-8'))
       const teamData = JSON.parse(fs.readFileSync(TEAM_FILE, 'utf-8'))
-      
-      return NextResponse.json({
-        content: contentData,
-        team: teamData
-      })
+        
+        return NextResponse.json({
+          content: contentData,
+          team: teamData
+        })
     }
 
     // 从 Supabase 读取最新数据
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
-
+    
     return NextResponse.json({
       content: contentRecord?.data || {},
       team: teamRecord?.data || []
@@ -85,19 +85,19 @@ export async function POST(request: NextRequest) {
     if (!checkSupabaseConfig()) {
       console.log('📁 使用文件系统保存数据（Supabase 未配置）')
       
-      try {
-        if (content) {
-          fs.writeFileSync(CONTENT_FILE, JSON.stringify(content, null, 2), 'utf-8')
-        }
-        if (team) {
-          fs.writeFileSync(TEAM_FILE, JSON.stringify(team, null, 2), 'utf-8')
-        }
+    try {
+      if (content) {
+        fs.writeFileSync(CONTENT_FILE, JSON.stringify(content, null, 2), 'utf-8')
+      }
+      if (team) {
+        fs.writeFileSync(TEAM_FILE, JSON.stringify(team, null, 2), 'utf-8')
+      }
         
         return NextResponse.json({ 
           success: true,
           message: 'Data saved to file system (Supabase not configured)'
         })
-      } catch (fsError) {
+    } catch (fsError) {
         console.error('Failed to write to file system:', fsError)
         return NextResponse.json(
           { error: 'Failed to save data', details: fsError instanceof Error ? fsError.message : 'Unknown error' },
