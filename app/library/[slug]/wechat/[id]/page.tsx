@@ -55,8 +55,8 @@ export default function WechatArticlePage() {
       const res = await fetch(`/api/wechat/articles?category=${slug}&limit=100`)
       const data = await res.json()
       
-      if (data.success && data.data) {
-        const found = data.data.find((a: WechatArticle) => a.id === articleId)
+      if (data.success && data.data?.articles) {
+        const found = data.data.articles.find((a: WechatArticle) => a.id === articleId)
         if (found) {
           setArticle(found)
         } else {
