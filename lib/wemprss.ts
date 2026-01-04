@@ -7,9 +7,53 @@
 
 // We-MP-RSS 服务配置
 const WEMPRSS_URL = process.env.WEMPRSS_URL || "http://81.70.105.204:8001";
+const WEMPRSS_USERNAME = process.env.WEMPRSS_USERNAME || "";
+const WEMPRSS_PASSWORD = process.env.WEMPRSS_PASSWORD || "";
 
 // 锦秋集的固定 ID
 const JINQIU_FEED_ID = "MP_WXS_3887776643";
+
+// Token 缓存
+let cachedApiToken: string | null = null;
+let apiTokenExpiry: number = 0;
+
+/**
+ * 获取 API Token（用于需要认证的接口）
+ */
+async function getApiToken(): Promise<string | null> {
+  // 检查缓存
+  if (cachedApiToken && apiTokenExpiry > Date.now()) {
+    return cachedApiToken;
+  }
+  
+  if (!WEMPRSS_USERNAME || !WEMPRSS_PASSWORD) {
+    return null;
+  }
+  
+  try {
+    const response = await fetch(`${WEMPRSS_URL}/api/v1/wx/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `username=${encodeURIComponent(WEMPRSS_USERNAME)}&password=${encodeURIComponent(WEMPRSS_PASSWORD)}`,
+    });
+
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    const token = data.access_token || data.data?.access_token;
+    
+    if (token) {
+      cachedApiToken = token;
+      // Token 有效期设为 3 天减 1 小时
+      apiTokenExpiry = Date.now() + (3 * 24 - 1) * 60 * 60 * 1000;
+      return token;
+    }
+  } catch (error) {
+    console.error("获取 API Token 失败:", error);
+  }
+  
+  return null;
+}
 
 /**
  * 文章类型
@@ -95,9 +139,105 @@ export async function getFeeds(): Promise<WeMpRssFeed[]> {
 }
 
 /**
- * 获取指定公众号的文章列表（通过 JSON feed，无需认证）
+ * 获取指定公众号的文章列表
+ * 
+ * 优先使用 API 接口（可获取全部文章），回退到 RSS feed
  */
 export async function getArticlesByFeed(
+  mpId: string,
+  limit = 200
+): Promise<WeMpRssArticle[]> {
+  try {
+    // 尝试使用 API 接口获取所有文章（支持分页，可获取全部）
+    const articles = await getArticlesFromApi(mpId, limit);
+    if (articles.length > 0) {
+      return articles;
+    }
+    
+    // 回退到 RSS feed
+    return await getArticlesFromRssFeed(mpId, limit);
+  } catch (error) {
+    console.error("获取文章列表错误:", error);
+    return [];
+  }
+}
+
+/**
+ * 从 API 接口获取文章（支持分页，可获取全部）
+ * 需要认证 Token
+ */
+async function getArticlesFromApi(
+  mpId: string,
+  limit = 200
+): Promise<WeMpRssArticle[]> {
+  const allArticles: WeMpRssArticle[] = [];
+  let offset = 0;
+  const pageSize = 100; // API 每页最多 100 条
+  
+  try {
+    // 获取认证 Token
+    const token = await getApiToken();
+    if (!token) {
+      console.log("未配置认证凭据，跳过 API 接口");
+      return [];
+    }
+    
+    const headers: HeadersInit = {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+    
+    while (allArticles.length < limit) {
+      const response = await fetch(
+        `${WEMPRSS_URL}/api/v1/wx/articles?mp_id=${mpId}&limit=${pageSize}&offset=${offset}&has_content=true`,
+        { headers }
+      );
+      
+      if (!response.ok) {
+        console.log(`API 接口返回 ${response.status}`);
+        break;
+      }
+
+      const data = await response.json();
+      const items = data.data?.list || [];
+      const total = data.data?.total || 0;
+      
+      if (items.length === 0) break;
+      
+      // 转换为统一格式
+      const articles = items.map((item: any) => ({
+        id: item.id || `${mpId}_${offset}`,
+        title: item.title || "",
+        content: item.content || "",
+        description: item.description || "",
+        url: item.url || "",
+        pic_url: item.pic_url,
+        publish_time: item.publish_time || Math.floor(Date.now() / 1000),
+        mp_id: mpId,
+        mp_name: item.mp_name || "锦秋集",
+        status: item.status,
+      }));
+      
+      allArticles.push(...articles);
+      offset += pageSize;
+      
+      console.log(`API 获取进度: ${allArticles.length}/${total}`);
+      
+      // 如果已获取全部或达到限制
+      if (offset >= total || allArticles.length >= limit) break;
+    }
+    
+    return allArticles;
+  } catch (error) {
+    console.error("API 接口获取失败:", error);
+    return [];
+  }
+}
+
+/**
+ * 从 RSS feed 获取文章（备用方案，有数量限制）
+ */
+async function getArticlesFromRssFeed(
   mpId: string,
   limit = 50
 ): Promise<WeMpRssArticle[]> {
@@ -128,7 +268,7 @@ export async function getArticlesByFeed(
       mp_name: item.feed?.name || item.channel_name || data.name || "锦秋集",
     }));
   } catch (error) {
-    console.error("获取文章列表错误:", error);
+    console.error("RSS Feed 获取失败:", error);
     return [];
   }
 }
@@ -155,10 +295,12 @@ export async function getArticleDetail(articleId: string): Promise<WeMpRssArticl
 /**
  * 通过公众号名称查找并获取文章
  * @param mpName 公众号名称，如 "锦秋集"
+ * @param limit 最大获取数量（默认 200，可获取全部）
+ * @param offset 起始位置
  */
 export async function getArticlesByMpName(
   mpName: string,
-  limit = 50,
+  limit = 200,
   offset = 0
 ): Promise<{ feed: WeMpRssFeed | null; articles: WeMpRssArticle[]; total: number }> {
   try {
@@ -183,14 +325,18 @@ export async function getArticlesByMpName(
       return { feed: null, articles: [], total: 0 };
     }
 
-    // 获取该公众号的文章
-    const allArticles = await getArticlesByFeed(feed.id, 100);
+    // 获取该公众号的文章（使用 API 接口可获取全部）
+    const allArticles = await getArticlesByFeed(feed.id, limit + offset);
     
     // 按时间倒序排序
     allArticles.sort((a, b) => (b.publish_time || 0) - (a.publish_time || 0));
     
-    // 分页
-    const paginatedArticles = allArticles.slice(offset, offset + limit);
+    // 分页（如果需要）
+    const paginatedArticles = offset > 0 
+      ? allArticles.slice(offset, offset + limit)
+      : allArticles.slice(0, limit);
+    
+    console.log(`获取到 ${allArticles.length} 篇文章，返回 ${paginatedArticles.length} 篇`);
     
     return {
       feed,
