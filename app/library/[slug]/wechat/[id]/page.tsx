@@ -262,16 +262,17 @@ export default function WechatArticlePage() {
         .wechat-article-content section {
           margin: 16px 0;
         }
-        /* 推荐阅读区域的图片 - 较小尺寸 */
+        /* 推荐阅读区域的图片 */
         .wechat-article-content .recommend-link {
-          display: inline-block;
-          margin: 4px 0;
+          display: block;
+          margin: 12px 0;
         }
         .wechat-article-content .recommend-img {
-          max-width: 200px !important;
+          max-width: 100% !important;
+          width: 100% !important;
           height: auto !important;
-          margin: 4px 0 !important;
-          border-radius: 4px !important;
+          margin: 8px 0 !important;
+          border-radius: 8px !important;
         }
       `}</style>
 
