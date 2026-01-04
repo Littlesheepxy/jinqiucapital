@@ -13,6 +13,69 @@ import {
 import { CATEGORIES, categorizeArticle, extractDescription, formatDate } from "@/lib/wechat-categories";
 
 const WEMPRSS_URL = process.env.WEMPRSS_URL || "http://81.70.105.204:8001";
+const WEMPRSS_USERNAME = process.env.WEMPRSS_USERNAME || "";
+const WEMPRSS_PASSWORD = process.env.WEMPRSS_PASSWORD || "";
+
+// Token 缓存
+let cachedToken: string | null = null;
+let tokenExpiry: number = 0;
+
+/**
+ * 登录 We-MP-RSS 获取 Token
+ */
+async function login(): Promise<string | null> {
+  if (!WEMPRSS_USERNAME || !WEMPRSS_PASSWORD) {
+    return null;
+  }
+  
+  const endpoints = ["/api/v1/wx/auth/login", "/api/v1/login"];
+  
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: WEMPRSS_USERNAME,
+          password: WEMPRSS_PASSWORD,
+        }),
+      });
+
+      if (!response.ok) continue;
+      const data = await response.json();
+      if (data.detail || data.error) continue;
+      
+      const token = data.access_token || data.data?.access_token;
+      if (token) return token;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function getValidToken(): Promise<string | null> {
+  if (cachedToken && tokenExpiry > Date.now()) {
+    return cachedToken;
+  }
+  cachedToken = await login();
+  if (cachedToken) {
+    tokenExpiry = Date.now() + (3 * 24 - 1) * 60 * 60 * 1000;
+  }
+  return cachedToken;
+}
+
+async function fetchWithAuth(endpoint: string): Promise<Response | null> {
+  const token = await getValidToken();
+  if (!token) return null;
+  
+  return fetch(`${WEMPRSS_URL}${endpoint}`, {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}
 
 // Supabase 客户端
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -94,11 +157,19 @@ export async function GET() {
  * Body:
  * - limit: 抓取文章数量，默认 200
  * - forceUpdate: 强制更新已存在的文章
+ * - fetchMore: 触发 We-MP-RSS 抓取更多历史文章
+ * - pages: 抓取页数，默认 10（约100篇文章）
+ * - username: We-MP-RSS 用户名（可选，覆盖环境变量）
+ * - password: We-MP-RSS 密码（可选，覆盖环境变量）
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { limit = 200, forceUpdate = false } = body;
+    const { limit = 200, forceUpdate = false, fetchMore = false, pages = 10, username, password } = body;
+    
+    // 允许通过请求体传入凭据
+    const wemprssUsername = username || WEMPRSS_USERNAME;
+    const wemprssPassword = password || WEMPRSS_PASSWORD;
 
     if (!supabase) {
       return NextResponse.json({
@@ -106,6 +177,25 @@ export async function POST(request: Request) {
         error: "Supabase 未配置，无法保存文章",
         suggestion: "请配置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量",
       }, { status: 500 });
+    }
+
+    // 如果需要抓取更多历史文章
+    let fetchMoreResult = null;
+    if (fetchMore) {
+      console.log(`触发 We-MP-RSS 抓取更多历史文章，页数: ${pages}`);
+      fetchMoreResult = await triggerFetchMore(pages, wemprssUsername, wemprssPassword);
+      
+      if (!fetchMoreResult.success) {
+        return NextResponse.json({
+          success: false,
+          error: fetchMoreResult.error,
+          suggestion: "请在请求中传入 username 和 password，或配置环境变量",
+        }, { status: 500 });
+      }
+      
+      // 等待 We-MP-RSS 抓取完成
+      console.log("等待 We-MP-RSS 抓取完成...");
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     // 从 We-MP-RSS 获取文章
@@ -186,6 +276,7 @@ export async function POST(request: Request) {
         newArticles: newRows.length,
         skippedArticles: rows.length - newRows.length,
         categoryStats,
+        fetchMoreResult,
       },
       message: `同步完成！获取 ${articles.length} 篇文章，新增 ${newRows.length} 篇`,
     });
@@ -195,5 +286,119 @@ export async function POST(request: Request) {
       success: false,
       error: error instanceof Error ? error.message : "同步失败",
     }, { status: 500 });
+  }
+}
+
+/**
+ * 登录并获取 Token（支持传入凭据）
+ */
+async function loginWithCredentials(username: string, password: string): Promise<string | null> {
+  if (!username || !password) {
+    return null;
+  }
+  
+  // We-MP-RSS 使用表单格式登录
+  const endpoint = "/api/v1/wx/auth/login";
+  
+  try {
+    console.log(`尝试登录 We-MP-RSS: ${WEMPRSS_URL}${endpoint}`);
+    const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+    });
+
+    const data = await response.json();
+    console.log("登录响应:", JSON.stringify(data).substring(0, 300));
+    
+    // 检查错误
+    if (data.detail?.code || data.detail?.message) {
+      console.log(`登录失败: ${data.detail.message}`);
+      return null;
+    }
+    
+    const token = data.access_token || data.data?.access_token || data.token;
+    if (token) {
+      console.log("登录成功，获取到 Token");
+      return token;
+    }
+    
+    return null;
+  } catch (err) {
+    console.log(`登录异常: ${err}`);
+    return null;
+  }
+}
+
+/**
+ * 触发 We-MP-RSS 抓取更多历史文章
+ */
+async function triggerFetchMore(
+  pages: number, 
+  username: string, 
+  password: string
+): Promise<{ success: boolean; error?: string; data?: any }> {
+  try {
+    // 登录获取 Token
+    const token = await loginWithCredentials(username, password);
+    if (!token) {
+      return { success: false, error: "登录 We-MP-RSS 失败，请检查用户名和密码" };
+    }
+    
+    const authHeaders = {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    };
+    
+    // 获取公众号列表 - 使用正确的端点
+    console.log("获取公众号列表...");
+    const feedsResponse = await fetch(`${WEMPRSS_URL}/api/v1/wx/mps?limit=100`, {
+      headers: authHeaders,
+    });
+    
+    if (!feedsResponse.ok) {
+      return { success: false, error: `获取公众号列表失败: ${feedsResponse.status}` };
+    }
+    
+    const feedsData = await feedsResponse.json();
+    const feeds = feedsData.data?.list || feedsData.list || [];
+    console.log(`找到 ${feeds.length} 个公众号`);
+    
+    // 找到锦秋集
+    const jinqiuFeed = feeds.find((f: any) => f.mp_name === DEFAULT_MP_NAME);
+    if (!jinqiuFeed) {
+      return { success: false, error: `未找到公众号: ${DEFAULT_MP_NAME}，可用公众号: ${feeds.map((f: any) => f.mp_name).join(', ')}` };
+    }
+    
+    console.log(`找到公众号: ${jinqiuFeed.mp_name}, ID: ${jinqiuFeed.id}`);
+    
+    // 触发抓取更多页面 - 使用正确的端点
+    console.log(`触发抓取 ${pages} 页文章...`);
+    const updateResponse = await fetch(
+      `${WEMPRSS_URL}/api/v1/wx/mps/update/${jinqiuFeed.id}?start_page=0&end_page=${pages}`,
+      { headers: authHeaders }
+    );
+    
+    const updateData = await updateResponse.json();
+    console.log("抓取响应:", JSON.stringify(updateData).substring(0, 500));
+    
+    const articlesFound = updateData.data?.total || 0;
+    
+    return {
+      success: updateData.code === 0,
+      data: {
+        feedId: jinqiuFeed.id,
+        feedName: jinqiuFeed.mp_name,
+        pagesRequested: pages,
+        articlesFound,
+        message: updateData.message,
+      },
+    };
+  } catch (error) {
+    console.error("触发抓取失败:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "触发抓取失败",
+    };
   }
 }
