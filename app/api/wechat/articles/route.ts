@@ -12,7 +12,9 @@ import {
   type WeMpRssArticle,
 } from "@/lib/wemprss";
 import { 
-  CATEGORIES, 
+  CATEGORIES,
+  CATEGORY_ALIASES,
+  normalizeCategory,
   categorizeArticle, 
   extractDescription, 
   formatDate 
@@ -44,7 +46,7 @@ function formatArticleFromWeMpRss(article: WeMpRssArticle, feedName?: string) {
   };
 }
 
-// 格式化数据库文章
+// 格式化数据库文章（自动将旧分类名转为新分类名）
 function formatArticleFromDb(row: any) {
   return {
     id: row.id,
@@ -56,8 +58,20 @@ function formatArticleFromDb(row: any) {
     publishTime: row.publish_time,
     publishDate: row.publish_date,
     mpName: row.mp_name,
-    category: row.category,
+    category: normalizeCategory(row.category), // 标准化分类名
   };
+}
+
+// 获取分类及其别名（用于数据库查询）
+function getCategoryWithAliases(category: string): string[] {
+  const categories = [category];
+  // 添加指向该分类的旧名称
+  for (const [oldName, newName] of Object.entries(CATEGORY_ALIASES)) {
+    if (newName === category) {
+      categories.push(oldName);
+    }
+  }
+  return categories;
 }
 
 export async function GET(request: Request) {
@@ -273,7 +287,14 @@ async function getArticlesFromDb(
       .or("hidden.is.null,hidden.eq.false");
 
     if (category) {
-      query = query.eq("category", category);
+      // 同时查询新分类名和旧分类名（兼容历史数据）
+      const categoryList = getCategoryWithAliases(category);
+      if (categoryList.length === 1) {
+        query = query.eq("category", category);
+      } else {
+        // 多个分类名用 in 查询
+        query = query.in("category", categoryList);
+      }
     }
 
     if (search) {

@@ -31,6 +31,8 @@ export default function AdminPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [activeResearchIndex, setActiveResearchIndex] = useState(0)
+  const [activeTeamIndex, setActiveTeamIndex] = useState(0)
+  const [activePortfolioIndex, setActivePortfolioIndex] = useState(0)
   const [expandedArticles, setExpandedArticles] = useState<{[key: string]: boolean}>({})
   const [showPreview, setShowPreview] = useState(false)
   const [previewContent, setPreviewContent] = useState<string>("")
@@ -97,6 +99,53 @@ export default function AdminPage() {
         setActiveResearchIndex(activeResearchIndex - 1)
       } else if (activeResearchIndex < oldIndex && activeResearchIndex >= newIndex) {
         setActiveResearchIndex(activeResearchIndex + 1)
+      }
+    }
+  }
+
+  // 团队成员拖拽排序
+  const handleTeamDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = teamData.findIndex((_, i) => `team-${i}` === active.id)
+      const newIndex = teamData.findIndex((_, i) => `team-${i}` === over.id)
+      
+      const newData = arrayMove(teamData, oldIndex, newIndex)
+      setTeamData(newData)
+      hasUnsavedChanges.current = true
+      
+      // 更新选中索引
+      if (activeTeamIndex === oldIndex) {
+        setActiveTeamIndex(newIndex)
+      } else if (activeTeamIndex > oldIndex && activeTeamIndex <= newIndex) {
+        setActiveTeamIndex(activeTeamIndex - 1)
+      } else if (activeTeamIndex < oldIndex && activeTeamIndex >= newIndex) {
+        setActiveTeamIndex(activeTeamIndex + 1)
+      }
+    }
+  }
+
+  // 投资组合拖拽排序
+  const handlePortfolioDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = contentData.portfolio.items.findIndex((_: any, i: number) => `portfolio-${i}` === active.id)
+      const newIndex = contentData.portfolio.items.findIndex((_: any, i: number) => `portfolio-${i}` === over.id)
+      
+      const newItems = arrayMove(contentData.portfolio.items, oldIndex, newIndex)
+      setContentData({
+        ...contentData,
+        portfolio: { ...contentData.portfolio, items: newItems }
+      })
+      hasUnsavedChanges.current = true
+      
+      // 更新选中索引
+      if (activePortfolioIndex === oldIndex) {
+        setActivePortfolioIndex(newIndex)
+      } else if (activePortfolioIndex > oldIndex && activePortfolioIndex <= newIndex) {
+        setActivePortfolioIndex(activePortfolioIndex - 1)
+      } else if (activePortfolioIndex < oldIndex && activePortfolioIndex >= newIndex) {
+        setActivePortfolioIndex(activePortfolioIndex + 1)
       }
     }
   }
@@ -1086,31 +1135,85 @@ export default function AdminPage() {
           <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>团队成员</h2>
-              <button
-                onClick={addTeamMember}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#225BBA",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
-              >
-                + 添加成员
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#666" }}>💡 拖拽标签可排序</span>
+                <button
+                  onClick={addTeamMember}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#225BBA",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  + 添加成员
+                </button>
+              </div>
             </div>
-            {teamData.map((member, index) => (
-              <div key={index} style={{
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                padding: "16px",
-                marginBottom: "16px"
+
+            {/* 成员标签 - 支持拖拽排序 */}
+            {teamData.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleTeamDragEnd}
+              >
+                <SortableContext
+                  items={teamData.map((_, i) => `team-${i}`)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  <div style={{
+                    display: "flex",
+                    gap: "4px",
+                    marginBottom: "20px",
+                    borderBottom: "2px solid #e0e0e0",
+                    flexWrap: "wrap",
+                    paddingBottom: "8px"
+                  }}>
+                    {teamData.map((member, index) => (
+                      <SortableItem key={`team-${index}`} id={`team-${index}`}>
+                        <button
+                          onClick={() => setActiveTeamIndex(index)}
+                          style={{
+                            padding: "10px 16px",
+                            backgroundColor: activeTeamIndex === index ? "#225BBA" : "transparent",
+                            color: activeTeamIndex === index ? "white" : "#666",
+                            border: "none",
+                            cursor: "pointer",
+                            fontWeight: activeTeamIndex === index ? "bold" : "normal",
+                            fontSize: "14px",
+                            borderRadius: "4px",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          {member.name || `成员 ${index + 1}`}
+                        </button>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {/* 当前选中的成员 */}
+            {teamData.length > 0 && teamData[activeTeamIndex] && (
+              <div style={{
+                border: "2px solid #ddd",
+                borderRadius: "8px",
+                padding: "20px",
+                backgroundColor: "#fafafa"
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
-                  <strong>成员 #{index + 1}</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <strong style={{ fontSize: "16px" }}>成员 #{activeTeamIndex + 1}</strong>
                   <button
-                    onClick={() => removeTeamMember(index)}
+                    onClick={() => {
+                      removeTeamMember(activeTeamIndex)
+                      if (activeTeamIndex >= teamData.length - 1) {
+                        setActiveTeamIndex(Math.max(0, teamData.length - 2))
+                      }
+                    }}
                     style={{
                       padding: "4px 12px",
                       backgroundColor: "#dc3545",
@@ -1128,39 +1231,48 @@ export default function AdminPage() {
                   <input
                     type="text"
                     placeholder="姓名"
-                    value={member.name}
-                    onChange={(e) => updateTeamMember(index, "name", e.target.value)}
+                    value={teamData[activeTeamIndex].name}
+                    onChange={(e) => updateTeamMember(activeTeamIndex, "name", e.target.value)}
                     style={{
-                      padding: "8px",
+                      padding: "10px",
                       border: "1px solid #ddd",
-                      borderRadius: "4px"
+                      borderRadius: "4px",
+                      fontSize: "14px"
                     }}
                   />
                   <input
                     type="text"
                     placeholder="职位（英文）"
-                    value={member.title}
-                    onChange={(e) => updateTeamMember(index, "title", e.target.value)}
+                    value={teamData[activeTeamIndex].title}
+                    onChange={(e) => updateTeamMember(activeTeamIndex, "title", e.target.value)}
                     style={{
-                      padding: "8px",
+                      padding: "10px",
                       border: "1px solid #ddd",
-                      borderRadius: "4px"
+                      borderRadius: "4px",
+                      fontSize: "14px"
                     }}
                   />
                   <input
                     type="text"
                     placeholder="个人主页链接（选填）"
-                    value={member.link || ""}
-                    onChange={(e) => updateTeamMember(index, "link", e.target.value)}
+                    value={teamData[activeTeamIndex].link || ""}
+                    onChange={(e) => updateTeamMember(activeTeamIndex, "link", e.target.value)}
                     style={{
-                      padding: "8px",
+                      padding: "10px",
                       border: "1px solid #ddd",
-                      borderRadius: "4px"
+                      borderRadius: "4px",
+                      fontSize: "14px"
                     }}
                   />
                 </div>
               </div>
-            ))}
+            )}
+
+            {teamData.length === 0 && (
+              <p style={{ color: "#666", textAlign: "center", padding: "40px" }}>
+                暂无成员，点击"+ 添加成员"开始添加
+              </p>
+            )}
           </div>
         )}
 
@@ -1203,115 +1315,94 @@ export default function AdminPage() {
                 }}
               />
             </div>
+            
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h3 style={{ fontSize: "16px", fontWeight: "bold" }}>投资项目列表</h3>
-              <button
-                onClick={addPortfolioItem}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#225BBA",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer"
-                }}
-              >
-                + 添加项目
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#666" }}>💡 拖拽标签可排序</span>
+                <button
+                  onClick={addPortfolioItem}
+                  style={{
+                    padding: "8px 16px",
+                    backgroundColor: "#225BBA",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer"
+                  }}
+                >
+                  + 添加项目
+                </button>
+              </div>
             </div>
-            {contentData.portfolio.items.map((item: any, index: number) => (
-              <div key={index} style={{
-                border: "2px solid #ddd",
-                borderRadius: "8px",
-                padding: "20px",
-                marginBottom: "20px",
-                backgroundColor: "#fafafa"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <strong style={{ fontSize: "16px" }}>项目 #{index + 1}</strong>
-                  <button
-                    onClick={() => removePortfolioItem(index)}
-                    style={{
-                      padding: "4px 12px",
-                      backgroundColor: "#dc3545",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer",
-                      fontSize: "12px"
-                    }}
-                  >
-                    删除项目
-                  </button>
-                </div>
-                
-                {/* 项目基本信息 */}
-                <div style={{ 
-                  backgroundColor: "white", 
-                  padding: "16px", 
-                  borderRadius: "6px", 
-                  marginBottom: "16px",
-                  border: "1px solid #e0e0e0"
-                }}>
-                  <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
-                    📌 项目信息
-                  </h4>
-                <div style={{ display: "grid", gap: "12px" }}>
-                  <input
-                    type="text"
-                    placeholder="项目名称（中文）"
-                    value={item.name.zh}
-                    onChange={(e) => updatePortfolioItem(index, "zh", "name", e.target.value)}
-                    style={{
-                        padding: "10px",
-                      border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px"
-                    }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="项目名称（英文）"
-                    value={item.name.en}
-                    onChange={(e) => updatePortfolioItem(index, "en", "name", e.target.value)}
-                    style={{
-                        padding: "10px",
-                      border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px"
-                    }}
-                  />
-                  <input
-                    type="text"
-                      placeholder="项目官网链接（选填）"
-                    value={item.link || ""}
-                    onChange={(e) => updatePortfolioItem(index, "", "link", e.target.value)}
-                      style={{
-                        padding: "10px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        fontSize: "14px"
-                      }}
-                    />
-                  </div>
-                </div>
 
-                {/* 创始人列表 */}
-                <div style={{ 
-                  backgroundColor: "white", 
-                  padding: "16px", 
-                  borderRadius: "6px",
-                  border: "1px solid #e0e0e0"
+            {/* 项目标签 - 支持拖拽排序 */}
+            {contentData.portfolio.items.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handlePortfolioDragEnd}
+              >
+                <SortableContext
+                  items={contentData.portfolio.items.map((_: any, i: number) => `portfolio-${i}`)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  <div style={{
+                    display: "flex",
+                    gap: "4px",
+                    marginBottom: "20px",
+                    borderBottom: "2px solid #e0e0e0",
+                    flexWrap: "wrap",
+                    paddingBottom: "8px"
+                  }}>
+                    {contentData.portfolio.items.map((item: any, index: number) => (
+                      <SortableItem key={`portfolio-${index}`} id={`portfolio-${index}`}>
+                        <button
+                          onClick={() => setActivePortfolioIndex(index)}
+                          style={{
+                            padding: "10px 16px",
+                            backgroundColor: activePortfolioIndex === index ? "#225BBA" : "transparent",
+                            color: activePortfolioIndex === index ? "white" : "#666",
+                            border: "none",
+                            cursor: "pointer",
+                            fontWeight: activePortfolioIndex === index ? "bold" : "normal",
+                            fontSize: "14px",
+                            borderRadius: "4px",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          {item.name.zh || item.name.en || `项目 ${index + 1}`}
+                        </button>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+
+            {/* 当前选中的项目 */}
+            {contentData.portfolio.items.length > 0 && contentData.portfolio.items[activePortfolioIndex] && (() => {
+              const item = contentData.portfolio.items[activePortfolioIndex]
+              const index = activePortfolioIndex
+              return (
+                <div style={{
+                  border: "2px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "20px",
+                  backgroundColor: "#fafafa"
                 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                    <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#225BBA" }}>
-                      👤 创始人信息
-                    </h4>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
+                    <strong style={{ fontSize: "16px" }}>项目 #{index + 1}</strong>
                     <button
-                      onClick={() => addPortfolioFounder(index)}
+                      onClick={() => {
+                        removePortfolioItem(index)
+                        if (activePortfolioIndex >= contentData.portfolio.items.length - 1) {
+                          setActivePortfolioIndex(Math.max(0, contentData.portfolio.items.length - 2))
+                        }
+                      }}
                       style={{
-                        padding: "6px 12px",
-                        backgroundColor: "#28a745",
+                        padding: "4px 12px",
+                        backgroundColor: "#dc3545",
                         color: "white",
                         border: "none",
                         borderRadius: "4px",
@@ -1319,84 +1410,169 @@ export default function AdminPage() {
                         fontSize: "12px"
                       }}
                     >
-                      + 添加创始人
+                      删除项目
                     </button>
                   </div>
                   
-                  {item.founders && item.founders.length > 0 ? (
-                    item.founders.map((founder: any, founderIndex: number) => (
-                      <div key={founderIndex} style={{
-                        backgroundColor: "#f9f9f9",
-                        padding: "12px",
-                        borderRadius: "4px",
-                        marginBottom: "10px",
-                        border: "1px solid #e8e8e8"
-                      }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-                          <span style={{ fontSize: "13px", color: "#666" }}>创始人 #{founderIndex + 1}</span>
-                          <button
-                            onClick={() => removePortfolioFounder(index, founderIndex)}
-                            style={{
-                              padding: "2px 8px",
-                              backgroundColor: "#dc3545",
-                              color: "white",
-                              border: "none",
-                              borderRadius: "3px",
-                              cursor: "pointer",
-                              fontSize: "11px"
-                            }}
-                          >
-                            删除
-                          </button>
+                  {/* 项目基本信息 */}
+                  <div style={{ 
+                    backgroundColor: "white", 
+                    padding: "16px", 
+                    borderRadius: "6px", 
+                    marginBottom: "16px",
+                    border: "1px solid #e0e0e0"
+                  }}>
+                    <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
+                      📌 项目信息
+                    </h4>
+                    <div style={{ display: "grid", gap: "12px" }}>
+                      <input
+                        type="text"
+                        placeholder="项目名称（中文）"
+                        value={item.name.zh}
+                        onChange={(e) => updatePortfolioItem(index, "zh", "name", e.target.value)}
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          borderRadius: "4px",
+                          fontSize: "14px"
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="项目名称（英文）"
+                        value={item.name.en}
+                        onChange={(e) => updatePortfolioItem(index, "en", "name", e.target.value)}
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          borderRadius: "4px",
+                          fontSize: "14px"
+                        }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="项目官网链接（选填）"
+                        value={item.link || ""}
+                        onChange={(e) => updatePortfolioItem(index, "", "link", e.target.value)}
+                        style={{
+                          padding: "10px",
+                          border: "1px solid #ddd",
+                          borderRadius: "4px",
+                          fontSize: "14px"
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 创始人列表 */}
+                  <div style={{ 
+                    backgroundColor: "white", 
+                    padding: "16px", 
+                    borderRadius: "6px",
+                    border: "1px solid #e0e0e0"
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                      <h4 style={{ fontSize: "14px", fontWeight: "bold", color: "#225BBA" }}>
+                        👤 创始人信息
+                      </h4>
+                      <button
+                        onClick={() => addPortfolioFounder(index)}
+                        style={{
+                          padding: "6px 12px",
+                          backgroundColor: "#28a745",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          fontSize: "12px"
+                        }}
+                      >
+                        + 添加创始人
+                      </button>
+                    </div>
+                    
+                    {item.founders && item.founders.length > 0 ? (
+                      item.founders.map((founder: any, founderIndex: number) => (
+                        <div key={founderIndex} style={{
+                          backgroundColor: "#f9f9f9",
+                          padding: "12px",
+                          borderRadius: "4px",
+                          marginBottom: "10px",
+                          border: "1px solid #e8e8e8"
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "13px", color: "#666" }}>创始人 #{founderIndex + 1}</span>
+                            <button
+                              onClick={() => removePortfolioFounder(index, founderIndex)}
+                              style={{
+                                padding: "2px 8px",
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "3px",
+                                cursor: "pointer",
+                                fontSize: "11px"
+                              }}
+                            >
+                              删除
+                            </button>
+                          </div>
+                          <div style={{ display: "grid", gap: "8px" }}>
+                            <input
+                              type="text"
+                              placeholder="创始人姓名（中文）"
+                              value={founder.name.zh}
+                              onChange={(e) => updatePortfolioFounder(index, founderIndex, "zh", "name", e.target.value)}
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "13px"
+                              }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="创始人姓名（英文）"
+                              value={founder.name.en}
+                              onChange={(e) => updatePortfolioFounder(index, founderIndex, "en", "name", e.target.value)}
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "13px"
+                              }}
+                            />
+                            <input
+                              type="text"
+                              placeholder="创始人个人链接（选填，如LinkedIn、Twitter等）"
+                              value={founder.link || ""}
+                              onChange={(e) => updatePortfolioFounder(index, founderIndex, "", "link", e.target.value)}
+                              style={{
+                                padding: "8px",
+                                border: "1px solid #ddd",
+                                borderRadius: "4px",
+                                fontSize: "13px"
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div style={{ display: "grid", gap: "8px" }}>
-                          <input
-                            type="text"
-                            placeholder="创始人姓名（中文）"
-                            value={founder.name.zh}
-                            onChange={(e) => updatePortfolioFounder(index, founderIndex, "zh", "name", e.target.value)}
-                    style={{
-                      padding: "8px",
-                      border: "1px solid #ddd",
-                              borderRadius: "4px",
-                              fontSize: "13px"
-                    }}
-                  />
-                          <input
-                            type="text"
-                            placeholder="创始人姓名（英文）"
-                            value={founder.name.en}
-                            onChange={(e) => updatePortfolioFounder(index, founderIndex, "en", "name", e.target.value)}
-                            style={{
-                              padding: "8px",
-                              border: "1px solid #ddd",
-                              borderRadius: "4px",
-                              fontSize: "13px"
-                            }}
-                          />
-                          <input
-                            type="text"
-                            placeholder="创始人个人链接（选填，如LinkedIn、Twitter等）"
-                            value={founder.link || ""}
-                            onChange={(e) => updatePortfolioFounder(index, founderIndex, "", "link", e.target.value)}
-                            style={{
-                              padding: "8px",
-                              border: "1px solid #ddd",
-                              borderRadius: "4px",
-                              fontSize: "13px"
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ color: "#999", fontSize: "13px", fontStyle: "italic" }}>
-                      暂无创始人信息，点击上方按钮添加
-                    </p>
-                  )}
+                      ))
+                    ) : (
+                      <p style={{ color: "#999", fontSize: "13px", fontStyle: "italic" }}>
+                        暂无创始人信息，点击上方按钮添加
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })()}
+
+            {contentData.portfolio.items.length === 0 && (
+              <p style={{ color: "#666", textAlign: "center", padding: "40px" }}>
+                暂无项目，点击"+ 添加项目"开始添加
+              </p>
+            )}
           </div>
         )}
 
