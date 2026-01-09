@@ -108,16 +108,10 @@ export default function WechatArticlePage() {
       .replace(/src="(https?:\/\/mmbiz\.wpimg\.cn[^"]+)"/gi, (match, url) => {
         return `src="${proxyImage(url)}"`
       })
-      // 将 <a imgurl="..."> 转换为实际图片（推荐阅读区域的小图）
-      .replace(/<a([^>]*)imgurl="([^"]+)"([^>]*)>([\s\S]*?)<\/a>/gi, (match, p1, imgurl, p3, innerContent) => {
-        // 如果内部已有内容，保留原样；否则添加图片
-        if (innerContent && innerContent.trim()) {
-          return match
-        }
-        const proxiedUrl = proxyImage(imgurl)
-        // 推荐阅读的图片设置为较小尺寸
-        return `<a${p1}${p3} class="recommend-link"><img src="${proxiedUrl}" class="recommend-img" /></a>`
-      })
+      // 删除"推荐阅读"部分及其后面的所有内容（包括图片链接）
+      .replace(/(<[^>]*>)*\s*(推荐阅读|相关阅读|延伸阅读|往期推荐|往期回顾)\s*[:：]?\s*[\s\S]*$/gi, '')
+      // 删除末尾可能残留的带 imgurl 的链接（推荐阅读区域的小卡片）
+      .replace(/(<a[^>]*imgurl="[^"]*"[^>]*>[\s\S]*?<\/a>\s*)+$/gi, '')
     
     return cleaned
   }
