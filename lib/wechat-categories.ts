@@ -16,7 +16,7 @@ export const CATEGORIES: Record<string, { name: { zh: string; en: string }; keyw
   },
   "jinqiu-lab": {
     name: { zh: "锦秋AI实验室", en: "Jinqiu AI Lab" },
-    keywords: ["实验室", "Lab", "测评", "产品", "工具", "AI实验"],
+    keywords: ["实验室", "Lab", "测评", "产品", "工具", "AI实验", "Scan", "扫描"],
     order: 3,
   },
   "jinqiu-roundtable": {
@@ -30,6 +30,17 @@ export const CATEGORIES: Record<string, { name: { zh: string; en: string }; keyw
     order: 5,
   },
 };
+
+// 旧分类名到新分类名的映射（用于兼容旧数据）
+export const CATEGORY_ALIASES: Record<string, string> = {
+  "jinqiu-scan": "jinqiu-lab",
+};
+
+// 标准化分类名（将旧名称转为新名称）
+export function normalizeCategory(category: string | null): string | null {
+  if (!category) return null;
+  return CATEGORY_ALIASES[category] || category;
+}
 
 /**
  * 根据文章标题和内容自动分类

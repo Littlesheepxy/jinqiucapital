@@ -6,6 +6,18 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { CATEGORY_ALIASES } from "@/lib/wechat-categories";
+
+// 获取分类及其别名（用于数据库查询）
+function getCategoryWithAliases(category: string): string[] {
+  const categories = [category];
+  for (const [oldName, newName] of Object.entries(CATEGORY_ALIASES)) {
+    if (newName === category) {
+      categories.push(oldName);
+    }
+  }
+  return categories;
+}
 
 // Supabase 客户端
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -90,9 +102,14 @@ export async function GET(request: Request) {
       .from("wechat_articles")
       .select("*", { count: "exact" });
 
-    // 分类筛选（先筛选）
+    // 分类筛选（先筛选，兼容旧分类名）
     if (category) {
-      query = query.eq("category", category);
+      const categoryList = getCategoryWithAliases(category);
+      if (categoryList.length === 1) {
+        query = query.eq("category", category);
+      } else {
+        query = query.in("category", categoryList);
+      }
     }
 
     // 搜索（在筛选结果中搜索）
