@@ -6,6 +6,22 @@ import path from 'path'
 const CONTENT_FILE = path.join(process.cwd(), 'public/data/content.json')
 const TEAM_FILE = path.join(process.cwd(), 'public/data/team.json')
 
+// 过滤隐藏的栏目（仅用于公开 API）
+function filterHiddenItems(content: any) {
+  if (!content || !content.research || !content.research.list) {
+    return content
+  }
+  
+  return {
+    ...content,
+    research: {
+      ...content.research,
+      // 过滤掉 hidden 为 true 的栏目
+      list: content.research.list.filter((item: any) => !item.hidden)
+    }
+  }
+}
+
 // 公开的数据读取 API（无需密码）
 export async function GET() {
   try {
@@ -30,8 +46,10 @@ export async function GET() {
         
         if (!contentError && !teamError) {
           console.log('✅ 从 Supabase 读取成功')
+          // 过滤隐藏的栏目
+          const filteredContent = filterHiddenItems(contentRecord?.data || {})
           return NextResponse.json({
-            content: contentRecord?.data || {},
+            content: filteredContent,
             team: teamRecord?.data || []
           })
         }
@@ -47,8 +65,11 @@ export async function GET() {
     const contentData = JSON.parse(fs.readFileSync(CONTENT_FILE, 'utf-8'))
     const teamData = JSON.parse(fs.readFileSync(TEAM_FILE, 'utf-8'))
     
+    // 过滤隐藏的栏目
+    const filteredContent = filterHiddenItems(contentData)
+    
     return NextResponse.json({
-      content: contentData,
+      content: filteredContent,
       team: teamData
     })
   } catch (error) {

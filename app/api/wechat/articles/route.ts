@@ -220,20 +220,22 @@ async function getArticlesFromDb(
   if (!supabase) return null;
 
   try {
-    // 先检查是否有数据
+    // 先检查是否有数据（不包括隐藏的）
     const { count } = await supabase
       .from("wechat_articles")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .or("hidden.is.null,hidden.eq.false");
 
     if (!count || count === 0) {
       return null; // 数据库为空，需要从 We-MP-RSS 获取
     }
 
     if (grouped) {
-      // 获取所有文章并分组
+      // 获取所有非隐藏文章并分组
       const { data: allArticles, error } = await supabase
         .from("wechat_articles")
         .select("*")
+        .or("hidden.is.null,hidden.eq.false")
         .order("publish_time", { ascending: false });
 
       if (error) throw error;
@@ -264,10 +266,11 @@ async function getArticlesFromDb(
       };
     }
 
-    // 构建查询
+    // 构建查询（只查非隐藏文章）
     let query = supabase
       .from("wechat_articles")
-      .select("*", { count: "exact" });
+      .select("*", { count: "exact" })
+      .or("hidden.is.null,hidden.eq.false");
 
     if (category) {
       query = query.eq("category", category);
