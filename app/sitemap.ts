@@ -30,11 +30,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
   
-  // Library 分类页面
+  // Library 分类页面（按显示顺序）
   const categories = [
-    'jinqiu-select',
-    'jinqiu-scan', 
     'jinqiu-spotlight',
+    'jinqiu-select',
+    'jinqiu-lab',
     'jinqiu-roundtable',
     'jinqiu-summit',
   ]
@@ -61,4 +61,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   
   return [...staticPages, ...categoryPages, ...articlePages]
 }
+
+
 

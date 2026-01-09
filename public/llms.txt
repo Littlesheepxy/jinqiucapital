@@ -12,11 +12,11 @@ We are an early-stage venture capital fund focusing on technology startups. We i
 
 ## Content Structure
 - `/` - Homepage with company intro, team, and portfolio
-- `/library/jinqiu-select` - Jinqiu Select: Research reports and analysis
-- `/library/jinqiu-scan` - Jinqiu Scan: Product reviews and tool evaluations
-- `/library/jinqiu-spotlight` - Jinqiu Spotlight: Founder interviews
-- `/library/jinqiu-roundtable` - Jinqiu Roundtable: Dinner gatherings
-- `/library/jinqiu-summit` - Jinqiu Summit: Conference events
+- `/library/jinqiu-spotlight` - Jinqiu Spotlight: Portfolio company updates and founder stories
+- `/library/jinqiu-select` - Jinqiu Select: Research reports and industry analysis
+- `/library/jinqiu-lab` - 锦秋AI实验室: AI product reviews and efficiency explorations
+- `/library/jinqiu-roundtable` - 锦秋小饭桌: Closed-door networking events for entrepreneurs
+- `/library/jinqiu-summit` - 锦秋会: Annual CEO conference
 
 ## API Endpoints (for AI/Machines)
 - `/api/content` - Company data (team, portfolio) in JSON
@@ -38,4 +38,6 @@ See `/sitemap.xml` for all pages.
 ## Language
 Content is available in both Chinese (zh) and English (en).
 Toggle via `?lang=zh` or `?lang=en` query parameter.
+
+
 

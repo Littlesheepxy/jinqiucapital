@@ -52,23 +52,28 @@ export async function GET() {
     ],
     library: [
       {
-        name: "Jinqiu Select",
-        description: "AI报告解读、行业研究分析"
-      },
-      {
-        name: "Jinqiu Scan",
-        description: "锦秋AI产品测评"
-      },
-      {
         name: "Jinqiu Spotlight",
+        slug: "jinqiu-spotlight",
         description: "追踪锦秋基金与被投企业的动态"
       },
       {
+        name: "Jinqiu Select",
+        slug: "jinqiu-select",
+        description: "AI报告解读、行业研究分析"
+      },
+      {
+        name: "锦秋AI实验室",
+        slug: "jinqiu-lab",
+        description: "AI产品测评与效率场景探索"
+      },
+      {
         name: "锦秋小饭桌",
+        slug: "jinqiu-roundtable",
         description: "为创业者打造的常态化闭门社交活动"
       },
       {
         name: "锦秋会",
+        slug: "jinqiu-summit",
         description: "一年一度的锦秋CEO大会"
       }
     ],
