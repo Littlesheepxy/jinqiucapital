@@ -1,7 +1,16 @@
 [
   {
+    "name": "Jinqiu Spotlight",
+    "nameCn": "Jinqiu Spotlight",
+    "summary": "追踪锦秋基金与被投企业的每一个光点与动态，为创业者传递一线行业风向。",
+    "link": "#",
+    "tags": ["被投动态", "创业者", "行业风向"],
+    "path": "/library/jinqiu-spotlight",
+    "date": "2025-01"
+  },
+  {
     "name": "Jinqiu Select",
-    "nameCn": "锦秋精选",
+    "nameCn": "Jinqiu Select",
     "summary": "AI 报告解读与行业研究，深度分析 AI 创业生态的最新动向与机遇。",
     "link": "#",
     "tags": ["行业研究", "AI报告", "投资洞察"],
@@ -9,12 +18,30 @@
     "date": "2025-01"
   },
   {
-    "name": "Jinqiu Scan",
-    "nameCn": "锦秋扫描",
-    "summary": "AI 产品测评，解锁 100 个效率场景，帮助创业者找到最适合的 AI 工具。",
+    "name": "Jinqiu AI Lab",
+    "nameCn": "锦秋AI实验室",
+    "summary": "AI 产品测评与效率场景探索，用AI解锁100个效率场景。",
     "link": "#",
     "tags": ["产品测评", "效率工具", "AI应用"],
-    "path": "/library/jinqiu-scan",
+    "path": "/library/jinqiu-lab",
+    "date": "2025-01"
+  },
+  {
+    "name": "Jinqiu Roundtable",
+    "nameCn": "锦秋小饭桌",
+    "summary": "为创业者打造的常态化闭门社交活动。",
+    "link": "#",
+    "tags": ["社交活动", "创业者", "闭门交流"],
+    "path": "/library/jinqiu-roundtable",
+    "date": "2025-01"
+  },
+  {
+    "name": "Jinqiu Summit",
+    "nameCn": "锦秋会",
+    "summary": "一年一度的锦秋CEO大会。",
+    "link": "#",
+    "tags": ["CEO大会", "年度峰会"],
+    "path": "/library/jinqiu-summit",
     "date": "2025-01"
   }
 ]

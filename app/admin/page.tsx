@@ -10,7 +10,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("")
   const [contentData, setContentData] = useState<any>(null)
   const [teamData, setTeamData] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState<"intro" | "team" | "portfolio" | "projects" | "research">("intro")
+  const [activeTab, setActiveTab] = useState<"intro" | "team" | "portfolio" | "projects" | "research" | "wechat-articles">("intro")
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
   const [activeResearchIndex, setActiveResearchIndex] = useState(0)
@@ -35,6 +35,16 @@ export default function AdminPage() {
   }>>([])
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
 
+  // 微信文章管理状态
+  const [wechatArticles, setWechatArticles] = useState<any[]>([])
+  const [wechatLoading, setWechatLoading] = useState(false)
+  const [wechatError, setWechatError] = useState<string | null>(null)
+  const [editingArticle, setEditingArticle] = useState<any>(null)
+  const [wechatCategoryFilter, setWechatCategoryFilter] = useState<string>("all")
+  const [wechatSearchQuery, setWechatSearchQuery] = useState<string>("")
+  const [savingArticle, setSavingArticle] = useState(false)
+  const [saveArticleSuccess, setSaveArticleSuccess] = useState(false)
+
   // 页面离开前警告
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -48,6 +58,13 @@ export default function AdminPage() {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [])
+
+  // 当切换到微信文章标签时，加载文章列表
+  useEffect(() => {
+    if (activeTab === "wechat-articles" && password && wechatArticles.length === 0) {
+      loadWechatArticles()
+    }
+  }, [activeTab, password])
 
   // 加载数据
   const loadData = async () => {
@@ -210,6 +227,121 @@ export default function AdminPage() {
       setMessage('✓ 已清空历史版本')
       setTimeout(() => setMessage(''), 2000)
     }
+  }
+
+  // 加载微信文章列表
+  const loadWechatArticles = async () => {
+    try {
+      setWechatLoading(true)
+      setWechatError(null)
+
+      const queryParams = new URLSearchParams()
+      if (wechatCategoryFilter !== "all") {
+        queryParams.append("category", wechatCategoryFilter)
+      }
+      if (wechatSearchQuery) {
+        queryParams.append("search", wechatSearchQuery)
+      }
+      queryParams.append("password", password)
+
+      const response = await fetch(`/api/admin/wechat-articles?${queryParams}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setWechatArticles(data.data)
+      } else {
+        setWechatError(data.error || "加载失败")
+      }
+    } catch (error) {
+      console.error("Failed to load wechat articles:", error)
+      setWechatError("加载失败")
+    } finally {
+      setWechatLoading(false)
+    }
+  }
+
+  // 保存微信文章
+  const saveWechatArticle = async (articleData: any) => {
+    try {
+      setSavingArticle(true)
+      setSaveArticleSuccess(false)
+
+      const response = await fetch("/api/admin/wechat-articles", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password,
+          ...articleData,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSaveArticleSuccess(true)
+        setMessage("✓ 文章保存成功")
+        loadWechatArticles()
+
+        // 延迟关闭弹窗，让用户看到成功状态
+        setTimeout(() => {
+          setEditingArticle(null)
+          setSavingArticle(false)
+          setSaveArticleSuccess(false)
+        }, 1500)
+      } else {
+        setMessage(`保存失败: ${data.error}`)
+        setSavingArticle(false)
+        setTimeout(() => setMessage(""), 3000)
+      }
+    } catch (error) {
+      console.error("Failed to save article:", error)
+      setMessage("保存失败")
+      setSavingArticle(false)
+      setTimeout(() => setMessage(""), 3000)
+    }
+  }
+
+  // 删除微信文章
+  const deleteWechatArticle = async (id: string) => {
+    if (!confirm("确定要删除这篇文章吗？")) return
+
+    try {
+      const response = await fetch("/api/admin/wechat-articles", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, id }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage("✓ 文章删除成功")
+        loadWechatArticles()
+      } else {
+        setMessage(`删除失败: ${data.error}`)
+      }
+      setTimeout(() => setMessage(""), 3000)
+    } catch (error) {
+      console.error("Failed to delete article:", error)
+      setMessage("删除失败")
+      setTimeout(() => setMessage(""), 3000)
+    }
+  }
+
+  // 图片上传处理
+  const handleImageUpload = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          resolve(event.target.result as string)
+        } else {
+          reject(new Error("图片读取失败"))
+        }
+      }
+      reader.onerror = () => reject(new Error("图片读取失败"))
+      reader.readAsDataURL(file)
+    })
   }
 
   // 登录验证
@@ -767,7 +899,8 @@ export default function AdminPage() {
           { key: "team", label: "团队" },
           { key: "portfolio", label: "投资组合" },
           { key: "projects", label: "项目" },
-          { key: "research", label: "研究与活动" }
+          { key: "research", label: "研究与活动" },
+          { key: "wechat-articles", label: "微信文章" }
         ].map(tab => (
           <button
             key={tab.key}
@@ -1638,12 +1771,284 @@ export default function AdminPage() {
                     </p>
                   )}
                 </div>
+               </div>
+               )
+             })()}
+           </div>
+         )}
+
+        {/* ===== 微信文章管理 ===== */}
+        {activeTab === "wechat-articles" && (
+          <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px" }}>
+            <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>微信文章管理</h2>
+              <button
+                onClick={loadWechatArticles}
+                disabled={wechatLoading}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#225BBA",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: wechatLoading ? "not-allowed" : "pointer",
+                  opacity: wechatLoading ? 0.6 : 1,
+                }}
+              >
+                {wechatLoading ? "加载中..." : "刷新文章列表"}
+              </button>
+            </div>
+
+            {/* 筛选和搜索 */}
+            <div style={{ 
+              display: "flex", 
+              gap: "12px", 
+              marginBottom: "20px", 
+              flexWrap: "wrap",
+              padding: "16px",
+              backgroundColor: "#f8f9f8",
+              borderRadius: "6px",
+              border: "1px solid #e0e0e0"
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "12px", fontWeight: "bold", color: "#666" }}>分类筛选</label>
+                <select
+                  value={wechatCategoryFilter}
+                  onChange={(e) => {
+                    setWechatCategoryFilter(e.target.value)
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    minWidth: "150px"
+                  }}
+                >
+                  <option value="all">全部分类</option>
+                  <option value="jinqiu-select">Jinqiu Select</option>
+                  <option value="jinqiu-scan">Jinqiu Scan</option>
+                  <option value="jinqiu-spotlight">Jinqiu Spotlight</option>
+                  <option value="jinqiu-roundtable">锦秋小饭桌</option>
+                  <option value="jinqiu-summit">锦秋会</option>
+                </select>
               </div>
-              )
-            })()}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: "200px" }}>
+                <label style={{ fontSize: "12px", fontWeight: "bold", color: "#666" }}>搜索文章</label>
+                <input
+                  type="text"
+                  placeholder="输入标题或内容关键词..."
+                  value={wechatSearchQuery}
+                  onChange={(e) => setWechatSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      loadWechatArticles()
+                    }
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    fontSize: "14px",
+                    flex: 1
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={loadWechatArticles}
+                disabled={wechatLoading}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#28a745",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: wechatLoading ? "not-allowed" : "pointer",
+                  opacity: wechatLoading ? 0.6 : 1,
+                  alignSelf: "flex-end",
+                  height: "38px"
+                }}
+              >
+                搜索
+              </button>
+            </div>
+
+            {/* 错误提示 */}
+            {wechatError && (
+              <div style={{
+                padding: "12px",
+                backgroundColor: "#f8d7da",
+                color: "#721c24",
+                borderRadius: "4px",
+                marginBottom: "20px"
+              }}>
+                ❌ {wechatError}
+              </div>
+            )}
+
+            {/* 加载状态 */}
+            {wechatLoading && (
+              <div style={{
+                padding: "40px",
+                textAlign: "center",
+                color: "#666"
+              }}>
+                加载中...
+              </div>
+            )}
+
+            {/* 文章列表 */}
+            {!wechatLoading && wechatArticles.length > 0 && (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px"
+              }}>
+                {wechatArticles.map((article) => (
+                  <div
+                    key={article.id}
+                    style={{
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "6px",
+                      padding: "16px",
+                      backgroundColor: "#fafafa",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* 标题和封面图 */}
+                        <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
+                          {article.cover_image && (
+                            <img
+                              src={article.cover_image}
+                              alt=""
+                              style={{
+                                width: "120px",
+                                height: "80px",
+                                objectFit: "cover",
+                                borderRadius: "4px",
+                                flexShrink: 0
+                              }}
+                            />
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <h4 style={{
+                              fontSize: "16px",
+                              fontWeight: "bold",
+                              marginBottom: "8px",
+                              color: "#225BBA",
+                              lineHeight: "1.4"
+                            }}>
+                              {article.title}
+                            </h4>
+                            <p style={{
+                              fontSize: "13px",
+                              color: "#666",
+                              marginBottom: "8px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              lineHeight: "1.5"
+                            }}>
+                              {article.description || "暂无描述"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 元信息 */}
+                        <div style={{
+                          display: "flex",
+                          gap: "12px",
+                          fontSize: "12px",
+                          color: "#999",
+                          flexWrap: "wrap"
+                        }}>
+                          <span>📅 {article.publish_date}</span>
+                          <span>📁 {article.category || "未分类"}</span>
+                          <span>📱 {article.mp_name || "未知来源"}</span>
+                        </div>
+                      </div>
+
+                      {/* 操作按钮 */}
+                      <div style={{
+                        display: "flex",
+                        gap: "8px",
+                        marginLeft: "16px",
+                        flexShrink: 0
+                      }}>
+                        <button
+                          onClick={() => setEditingArticle(article)}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: "#225BBA",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px"
+                          }}
+                          title="编辑文章"
+                        >
+                          ✏️ 编辑
+                        </button>
+                        <a
+                          href={article.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: "#17a2b8",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            textDecoration: "none"
+                          }}
+                          title="查看原文"
+                        >
+                          🔗 原文
+                        </a>
+                        <button
+                          onClick={() => deleteWechatArticle(article.id)}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: "#dc3545",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px"
+                          }}
+                          title="删除文章"
+                        >
+                          🗑️ 删除
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 无文章提示 */}
+            {!wechatLoading && wechatArticles.length === 0 && !wechatError && (
+              <div style={{
+                padding: "60px 20px",
+                textAlign: "center",
+                color: "#999"
+              }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
+                <p>暂无文章</p>
+              </div>
+            )}
           </div>
         )}
-        </div>
+         </div>
 
         {/* 右侧预览区 */}
         {showPreview && (
@@ -2318,6 +2723,232 @@ export default function AdminPage() {
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#225BBA"}
               >
                 开始使用 →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 文章编辑弹窗 */}
+      {editingArticle && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          animation: "modal-fade-in 0.2s ease-out"
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "8px",
+            width: "90%",
+            maxWidth: "1000px",
+            maxHeight: "90vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            animation: "modal-scale-in 0.2s ease-out"
+          }}>
+            {/* 弹窗头部 */}
+            <div style={{
+              padding: "20px",
+              borderBottom: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              backgroundColor: "#f8f8f8"
+            }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "bold", margin: 0 }}>
+                编辑文章
+              </h3>
+              <button
+                onClick={() => setEditingArticle(null)}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px"
+                }}
+              >
+                关闭
+              </button>
+            </div>
+
+            {/* 弹窗内容 */}
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "20px"
+            }}>
+              {/* 基本信息 */}
+              <div style={{
+                backgroundColor: "#f8f8f8",
+                padding: "16px",
+                borderRadius: "6px",
+                marginBottom: "20px",
+                border: "1px solid #e0e0e0"
+              }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
+                  📌 基本信息
+                </h4>
+                <div style={{ display: "grid", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "13px" }}>
+                      文章标题
+                    </label>
+                    <input
+                      type="text"
+                      value={editingArticle.title}
+                      onChange={(e) => setEditingArticle({...editingArticle, title: e.target.value})}
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        width: "100%"
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "13px" }}>
+                      文章描述
+                    </label>
+                    <textarea
+                      value={editingArticle.description || ""}
+                      onChange={(e) => setEditingArticle({...editingArticle, description: e.target.value})}
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        width: "100%",
+                        minHeight: "80px",
+                        resize: "vertical"
+                      }}
+                      placeholder="简短描述，将显示在文章列表中"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "13px" }}>
+                      封面图片 URL
+                    </label>
+                    <input
+                      type="text"
+                      value={editingArticle.cover_image || ""}
+                      onChange={(e) => setEditingArticle({...editingArticle, cover_image: e.target.value})}
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        width: "100%"
+                      }}
+                      placeholder="输入图片 URL 或在下方内容中插入图片"
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: "bold", fontSize: "13px" }}>
+                      分类
+                    </label>
+                    <select
+                      value={editingArticle.category || ""}
+                      onChange={(e) => setEditingArticle({...editingArticle, category: e.target.value})}
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        width: "100%"
+                      }}
+                    >
+                      <option value="">未分类</option>
+                      <option value="jinqiu-select">Jinqiu Select</option>
+                      <option value="jinqiu-scan">Jinqiu Scan</option>
+                      <option value="jinqiu-spotlight">Jinqiu Spotlight</option>
+                      <option value="jinqiu-roundtable">锦秋小饭桌</option>
+                      <option value="jinqiu-summit">锦秋会</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 文章内容 */}
+              <div style={{
+                backgroundColor: "#f8f8f8",
+                padding: "16px",
+                borderRadius: "6px",
+                border: "1px solid #e0e0e0"
+              }}>
+                <h4 style={{ fontSize: "14px", fontWeight: "bold", marginBottom: "12px", color: "#225BBA" }}>
+                  📝 文章内容（富文本编辑）
+                </h4>
+                <div style={{ fontSize: "12px", color: "#666", marginBottom: "12px" }}>
+                  💡 提示：点击工具栏的 🖼️ 插入图片 按钮可在文章中插入图片
+                </div>
+                <RichTextEditor
+                  value={editingArticle.content || ""}
+                  onChange={(value) => setEditingArticle({...editingArticle, content: value})}
+                  placeholder="输入文章内容..."
+                  minHeight="400px"
+                  onImageUpload={handleImageUpload}
+                />
+              </div>
+            </div>
+
+            {/* 弹窗底部 */}
+            <div style={{
+              padding: "20px",
+              borderTop: "1px solid #ddd",
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "12px",
+              backgroundColor: "#f8f8f8"
+            }}>
+              <button
+                onClick={() => setEditingArticle(null)}
+                disabled={savingArticle}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: savingArticle ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  opacity: savingArticle ? 0.5 : 1
+                }}
+              >
+                取消
+              </button>
+              <button
+                onClick={() => saveWechatArticle(editingArticle)}
+                disabled={savingArticle}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: saveArticleSuccess ? "#28a745" : "#225BBA",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: savingArticle ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  opacity: savingArticle ? 0.7 : 1,
+                  minWidth: "120px"
+                }}
+              >
+                {savingArticle ? "保存中..." : saveArticleSuccess ? "✓ 保存成功" : "保存更改"}
               </button>
             </div>
           </div>

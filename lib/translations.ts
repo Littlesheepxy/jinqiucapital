@@ -50,16 +50,16 @@ export const translations = {
       title: "研究库",
       items: [
         {
+          name: "Jinqiu Spotlight",
+          summary: "追踪锦秋基金与被投企业的每一个光点与动态，为创业者传递一线行业风向。"
+        },
+        {
           name: "Jinqiu Select",
           summary: "AI报告解读、行业研究分析。跨越语言与时差，传播科技圈最值得被听到的声音。"
         },
         {
-          name: "Jinqiu Scan",
-          summary: "锦秋AI产品测评。用AI 解锁100个效率场景。"
-        },
-        {
-          name: "Jinqiu Spotlight",
-          summary: "追踪锦秋基金与被投企业的每一个光点与动态，为创业者传递一线行业风向。"
+          name: "锦秋AI实验室",
+          summary: "AI产品测评与效率场景探索。用AI解锁100个效率场景。"
         },
         {
           name: "锦秋小饭桌",

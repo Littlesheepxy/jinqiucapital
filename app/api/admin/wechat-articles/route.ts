@@ -1,0 +1,237 @@
+/**
+ * 微信文章管理 API - 后台管理专用
+ * 
+ * 提供微信文章的 CRUD 操作
+ */
+
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+// Supabase 客户端
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// 验证密码
+async function verifyPassword(password: string): Promise<boolean> {
+  const correctPassword = process.env.ADMIN_PASSWORD || "jinqiu2025";
+  return password === correctPassword;
+}
+
+// 验证请求
+async function validateRequest(request: Request): Promise<boolean> {
+  try {
+    const { searchParams } = new URL(request.url);
+    const password = searchParams.get("password");
+    if (password) {
+      return await verifyPassword(password);
+    }
+
+    const body = await request.json().catch(() => ({}));
+    if (body.password) {
+      return await verifyPassword(body.password);
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    // 验证权限
+    const isValid = await validateRequest(request);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "未授权访问" },
+        { status: 401 }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { error: "未配置 Supabase" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const id = searchParams.get("id");
+
+    // 获取单篇文章
+    if (id) {
+      const { data, error } = await supabase
+        .from("wechat_articles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (!data) {
+        return NextResponse.json(
+          { error: "文章不存在" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        data,
+      });
+    }
+
+    // 获取文章列表
+    let query = supabase
+      .from("wechat_articles")
+      .select("*", { count: "exact" });
+
+    if (category) {
+      query = query.eq("category", category);
+    }
+
+    const { data, error, count } = await query
+      .order("publish_time", { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      data: data || [],
+      total: count || 0,
+      pagination: {
+        limit,
+        offset,
+        hasMore: offset + limit < (count || 0),
+      },
+    });
+  } catch (error) {
+    console.error("获取微信文章失败:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "获取文章失败",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    // 验证权限
+    const isValid = await validateRequest(request);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "未授权访问" },
+        { status: 401 }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { error: "未配置 Supabase" },
+        { status: 500 }
+      );
+    }
+
+    const body = await request.json();
+    const { id, title, description, content, coverImage, category } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "缺少文章 ID" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 更新文章
+    const { data, error } = await supabase
+      .from("wechat_articles")
+      .update({
+        title,
+        description,
+        content,
+        cover_image: coverImage,
+        category,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      data,
+      message: "文章更新成功",
+    });
+  } catch (error) {
+    console.error("更新微信文章失败:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "更新文章失败",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    // 验证权限
+    const isValid = await validateRequest(request);
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "未授权访问" },
+        { status: 401 }
+      );
+    }
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { error: "未配置 Supabase" },
+        { status: 500 }
+      );
+    }
+
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "缺少文章 ID" },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 删除文章
+    const { error } = await supabase
+      .from("wechat_articles")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    return NextResponse.json({
+      success: true,
+      message: "文章删除成功",
+    });
+  } catch (error) {
+    console.error("删除微信文章失败:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "删除文章失败",
+      },
+      { status: 500 }
+    );
+  }
+}

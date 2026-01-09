@@ -31,3 +31,5 @@ CREATE TRIGGER update_wechat_articles_updated_at
 
 COMMENT ON TABLE wechat_articles IS '微信公众号文章缓存表';
 
+
+
