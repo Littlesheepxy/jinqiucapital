@@ -58,7 +58,8 @@ export async function GET(request: Request) {
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const search = searchParams.get("search");
+    const limit = parseInt(searchParams.get("limit") || "100");
     const offset = parseInt(searchParams.get("offset") || "0");
     const id = searchParams.get("id");
 
@@ -89,8 +90,14 @@ export async function GET(request: Request) {
       .from("wechat_articles")
       .select("*", { count: "exact" });
 
+    // 分类筛选（先筛选）
     if (category) {
       query = query.eq("category", category);
+    }
+
+    // 搜索（在筛选结果中搜索）
+    if (search) {
+      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
     const { data, error, count } = await query

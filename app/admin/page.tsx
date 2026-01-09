@@ -328,18 +328,22 @@ export default function AdminPage() {
     }
   }
 
-  // 加载微信文章列表
-  const loadWechatArticles = async () => {
+  // 加载微信文章列表（支持传入参数覆盖当前状态）
+  const loadWechatArticles = async (overrideCategory?: string, overrideSearch?: string) => {
     try {
       setWechatLoading(true)
       setWechatError(null)
 
+      // 使用传入参数或当前状态
+      const categoryToUse = overrideCategory !== undefined ? overrideCategory : wechatCategoryFilter
+      const searchToUse = overrideSearch !== undefined ? overrideSearch : wechatSearchQuery
+
       const queryParams = new URLSearchParams()
-      if (wechatCategoryFilter !== "all") {
-        queryParams.append("category", wechatCategoryFilter)
+      if (categoryToUse !== "all") {
+        queryParams.append("category", categoryToUse)
       }
-      if (wechatSearchQuery) {
-        queryParams.append("search", wechatSearchQuery)
+      if (searchToUse) {
+        queryParams.append("search", searchToUse)
       }
       queryParams.append("password", password)
 
@@ -1869,7 +1873,7 @@ export default function AdminPage() {
                                     文章链接: /library/{item.slug}/{article.slug}
                 </div>
                                 )}
-                              </div>
+              </div>
 
                               {/* 文章内容 */}
                               <div style={{ marginTop: "12px" }}>
@@ -1923,7 +1927,7 @@ export default function AdminPage() {
             <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>微信文章管理</h2>
               <button
-                onClick={loadWechatArticles}
+                onClick={() => loadWechatArticles()}
                 disabled={wechatLoading}
                 style={{
                   padding: "8px 16px",
@@ -1939,80 +1943,143 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* 筛选和搜索 */}
+            {/* 筛选和搜索 - 两步操作：1.选分类 2.搜索 */}
             <div style={{ 
               display: "flex", 
+              flexDirection: "column",
               gap: "12px", 
               marginBottom: "20px", 
-              flexWrap: "wrap",
               padding: "16px",
               backgroundColor: "#f8f9f8",
               borderRadius: "6px",
               border: "1px solid #e0e0e0"
             }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "bold", color: "#666" }}>分类筛选</label>
-                <select
-                  value={wechatCategoryFilter}
-                  onChange={(e) => {
-                    setWechatCategoryFilter(e.target.value)
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    minWidth: "150px"
-                  }}
-                >
-                  <option value="all">全部分类</option>
-                  <option value="jinqiu-spotlight">Jinqiu Spotlight</option>
-                  <option value="jinqiu-select">Jinqiu Select</option>
-                  <option value="jinqiu-lab">锦秋AI实验室</option>
-                  <option value="jinqiu-roundtable">锦秋小饭桌</option>
-                  <option value="jinqiu-summit">锦秋会</option>
-                </select>
+              {/* 第一步：选择分类 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "13px", fontWeight: "bold", color: "#333" }}>① 选择分类：</span>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {[
+                    { value: "all", label: "全部" },
+                    { value: "jinqiu-spotlight", label: "Spotlight" },
+                    { value: "jinqiu-select", label: "Select" },
+                    { value: "jinqiu-lab", label: "AI实验室" },
+                    { value: "jinqiu-roundtable", label: "小饭桌" },
+                    { value: "jinqiu-summit", label: "锦秋会" },
+                  ].map(cat => (
+                    <button
+                      key={cat.value}
+                      onClick={() => {
+                        setWechatCategoryFilter(cat.value)
+                        // 切换分类时自动加载（传入新分类，保留当前搜索词）
+                        loadWechatArticles(cat.value, wechatSearchQuery)
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        backgroundColor: wechatCategoryFilter === cat.value ? "#225BBA" : "white",
+                        color: wechatCategoryFilter === cat.value ? "white" : "#666",
+                        border: `1px solid ${wechatCategoryFilter === cat.value ? "#225BBA" : "#ddd"}`,
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        fontWeight: wechatCategoryFilter === cat.value ? "bold" : "normal",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+            ))}
+          </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: "200px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "bold", color: "#666" }}>搜索文章</label>
-                <input
-                  type="text"
-                  placeholder="输入标题或内容关键词..."
-                  value={wechatSearchQuery}
-                  onChange={(e) => setWechatSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      loadWechatArticles()
-                    }
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    fontSize: "14px",
-                    flex: 1
-                  }}
-                />
+              {/* 第二步：搜索 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "13px", fontWeight: "bold", color: "#333" }}>② 搜索：</span>
+                <div style={{ display: "flex", gap: "8px", flex: 1, minWidth: "200px" }}>
+                  <input
+                    type="text"
+                    placeholder={wechatCategoryFilter === "all" 
+                      ? "在全部文章中搜索..." 
+                      : `在当前分类中搜索...`}
+                    value={wechatSearchQuery}
+                    onChange={(e) => setWechatSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        loadWechatArticles()
+                      }
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                      flex: 1
+                    }}
+                  />
+                  <button
+                    onClick={() => loadWechatArticles()}
+                    disabled={wechatLoading}
+                    style={{
+                      padding: "8px 16px",
+                      backgroundColor: "#225BBA",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: wechatLoading ? "not-allowed" : "pointer",
+                      opacity: wechatLoading ? 0.6 : 1,
+                    }}
+                  >
+                    🔍 搜索
+                  </button>
+                  {(wechatSearchQuery || wechatCategoryFilter !== "all") && (
+                    <button
+                      onClick={() => {
+                        setWechatCategoryFilter("all")
+                        setWechatSearchQuery("")
+                        loadWechatArticles("all", "")
+                      }}
+                      style={{
+                        padding: "8px 12px",
+                        backgroundColor: "#f0f0f0",
+                        color: "#666",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      ↺ 重置
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <button
-                onClick={loadWechatArticles}
-                disabled={wechatLoading}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#28a745",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: wechatLoading ? "not-allowed" : "pointer",
-                  opacity: wechatLoading ? 0.6 : 1,
-                  alignSelf: "flex-end",
-                  height: "38px"
-                }}
-              >
-                搜索
-              </button>
+              {/* 当前筛选状态 */}
+              <div style={{ 
+                fontSize: "12px", 
+                color: "#666",
+                padding: "8px 12px",
+                backgroundColor: "#e8f4fd",
+                borderRadius: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}>
+                <span>📋 当前显示：</span>
+                <span style={{ fontWeight: "bold", color: "#225BBA" }}>
+                  {wechatCategoryFilter === "all" ? "全部分类" : 
+                    { "jinqiu-spotlight": "Jinqiu Spotlight", "jinqiu-select": "Jinqiu Select", 
+                      "jinqiu-lab": "锦秋AI实验室", "jinqiu-roundtable": "锦秋小饭桌", 
+                      "jinqiu-summit": "锦秋会" }[wechatCategoryFilter] || wechatCategoryFilter}
+                </span>
+                {wechatSearchQuery && (
+                  <>
+                    <span>→</span>
+                    <span>关键词 "<strong>{wechatSearchQuery}</strong>"</span>
+                  </>
+                )}
+                <span style={{ marginLeft: "auto" }}>
+                  共 {wechatArticles.length} 篇文章
+                </span>
+              </div>
             </div>
 
             {/* 错误提示 */}
