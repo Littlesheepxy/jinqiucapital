@@ -4,6 +4,23 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import Confetti from "react-confetti"
 import { useDebouncedCallback } from "use-debounce"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { SortableItem, VisibilityToggle } from "@/components/sortable-item"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -44,6 +61,88 @@ export default function AdminPage() {
   const [wechatSearchQuery, setWechatSearchQuery] = useState<string>("")
   const [savingArticle, setSavingArticle] = useState(false)
   const [saveArticleSuccess, setSaveArticleSuccess] = useState(false)
+
+  // 拖拽排序传感器
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // 研究栏目拖拽排序
+  const handleResearchDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id) {
+      const oldIndex = contentData.research.list.findIndex((item: any) => 
+        (item.slug || `item-${contentData.research.list.indexOf(item)}`) === active.id
+      )
+      const newIndex = contentData.research.list.findIndex((item: any) => 
+        (item.slug || `item-${contentData.research.list.indexOf(item)}`) === over.id
+      )
+      
+      const newList = arrayMove(contentData.research.list, oldIndex, newIndex)
+      setContentData({
+        ...contentData,
+        research: { ...contentData.research, list: newList }
+      })
+      hasUnsavedChanges.current = true
+      
+      // 更新选中索引
+      if (activeResearchIndex === oldIndex) {
+        setActiveResearchIndex(newIndex)
+      } else if (activeResearchIndex > oldIndex && activeResearchIndex <= newIndex) {
+        setActiveResearchIndex(activeResearchIndex - 1)
+      } else if (activeResearchIndex < oldIndex && activeResearchIndex >= newIndex) {
+        setActiveResearchIndex(activeResearchIndex + 1)
+      }
+    }
+  }
+
+  // 切换研究栏目隐藏状态
+  const toggleResearchHidden = (index: number) => {
+    const newList = [...contentData.research.list]
+    newList[index] = {
+      ...newList[index],
+      hidden: !newList[index].hidden
+    }
+    setContentData({
+      ...contentData,
+      research: { ...contentData.research, list: newList }
+    })
+    hasUnsavedChanges.current = true
+  }
+
+  // 切换微信文章隐藏状态
+  const toggleWechatArticleHidden = async (id: string, currentHidden: boolean) => {
+    try {
+      const response = await fetch("/api/admin/wechat-articles", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password,
+          id,
+          hidden: !currentHidden,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage(`✓ 文章已${currentHidden ? "显示" : "隐藏"}`)
+        loadWechatArticles()
+      } else {
+        setMessage(`操作失败: ${data.error}`)
+      }
+      setTimeout(() => setMessage(""), 3000)
+    } catch (error) {
+      console.error("Failed to toggle article visibility:", error)
+      setMessage("操作失败")
+      setTimeout(() => setMessage(""), 3000)
+    }
+  }
 
   // 页面离开前警告
   useEffect(() => {
@@ -1407,6 +1506,8 @@ export default function AdminPage() {
           <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>研究与活动</h2>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <span style={{ fontSize: "12px", color: "#666" }}>💡 拖拽标签可排序</span>
               <button
                 onClick={addResearch}
                 style={{
@@ -1421,37 +1522,55 @@ export default function AdminPage() {
                 + 添加项目
               </button>
             </div>
+            </div>
 
-            {/* 项目切换标签 */}
+            {/* 项目切换标签 - 支持拖拽排序 */}
             {contentData.research.list.length > 0 && (
-              <div style={{
-                display: "flex",
-                gap: "8px",
-                marginBottom: "20px",
-                borderBottom: "2px solid #e0e0e0",
-                flexWrap: "wrap"
-              }}>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleResearchDragEnd}
+              >
+                <SortableContext
+                  items={contentData.research.list.map((item: any, i: number) => item.slug || `item-${i}`)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  <div style={{
+                    display: "flex",
+                    gap: "4px",
+                    marginBottom: "20px",
+                    borderBottom: "2px solid #e0e0e0",
+                    flexWrap: "wrap",
+                    paddingBottom: "8px"
+                  }}>
             {contentData.research.list.map((item: any, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveResearchIndex(index)}
-                    style={{
-                      padding: "12px 20px",
-                      backgroundColor: activeResearchIndex === index ? "#225BBA" : "transparent",
-                      color: activeResearchIndex === index ? "white" : "#666",
-                      border: "none",
-                      borderBottom: activeResearchIndex === index ? "none" : "2px solid transparent",
-                      cursor: "pointer",
-                      fontWeight: activeResearchIndex === index ? "bold" : "normal",
-                      fontSize: "14px",
-                      borderRadius: "4px 4px 0 0",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    {item.name.zh || `项目 ${index + 1}`}
-                  </button>
-                ))}
-              </div>
+                      <SortableItem key={item.slug || `item-${index}`} id={item.slug || `item-${index}`}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <button
+                            onClick={() => setActiveResearchIndex(index)}
+                            style={{
+                              padding: "10px 16px",
+                              backgroundColor: activeResearchIndex === index ? "#225BBA" : item.hidden ? "#f0f0f0" : "transparent",
+                              color: activeResearchIndex === index ? "white" : item.hidden ? "#999" : "#666",
+                              border: "none",
+                              cursor: "pointer",
+                              fontWeight: activeResearchIndex === index ? "bold" : "normal",
+                              fontSize: "14px",
+                borderRadius: "4px",
+                              transition: "all 0.2s",
+                              textDecoration: item.hidden ? "line-through" : "none",
+                              opacity: item.hidden ? 0.6 : 1,
+                            }}
+                          >
+                            {item.hidden && "🙈 "}
+                            {item.name.zh || `项目 ${index + 1}`}
+                          </button>
+                        </div>
+                      </SortableItem>
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             {/* 当前选中的项目 */}
@@ -1460,14 +1579,21 @@ export default function AdminPage() {
               const index = activeResearchIndex
               return (
               <div key={index} style={{
-                border: "2px solid #ddd",
+                border: item.hidden ? "2px dashed #ccc" : "2px solid #ddd",
                 borderRadius: "8px",
                 padding: "20px",
                 marginBottom: "20px",
-                backgroundColor: "#fafafa"
+                backgroundColor: item.hidden ? "#f9f9f9" : "#fafafa",
+                opacity: item.hidden ? 0.8 : 1,
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <strong style={{ fontSize: "16px" }}>项目 #{index + 1}</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <strong style={{ fontSize: "16px" }}>项目 #{index + 1}</strong>
+                    <VisibilityToggle
+                      hidden={item.hidden || false}
+                      onChange={() => toggleResearchHidden(index)}
+                    />
+                  </div>
                   <button
                     onClick={() => removeResearch(index)}
                     style={{
@@ -1483,6 +1609,20 @@ export default function AdminPage() {
                     删除
                   </button>
                 </div>
+                
+                {item.hidden && (
+                  <div style={{
+                    padding: "8px 12px",
+                    backgroundColor: "#fff3cd",
+                    border: "1px solid #ffc107",
+                    borderRadius: "4px",
+                    marginBottom: "16px",
+                    fontSize: "13px",
+                    color: "#856404"
+                  }}>
+                    ⚠️ 此栏目已隐藏，不会在前台显示
+                  </div>
+                )}
                 
                 {/* 基本信息 */}
                 <div style={{ 
@@ -1826,9 +1966,9 @@ export default function AdminPage() {
                   }}
                 >
                   <option value="all">全部分类</option>
-                  <option value="jinqiu-select">Jinqiu Select</option>
-                  <option value="jinqiu-scan">Jinqiu Scan</option>
                   <option value="jinqiu-spotlight">Jinqiu Spotlight</option>
+                  <option value="jinqiu-select">Jinqiu Select</option>
+                  <option value="jinqiu-lab">锦秋AI实验室</option>
                   <option value="jinqiu-roundtable">锦秋小饭桌</option>
                   <option value="jinqiu-summit">锦秋会</option>
                 </select>
@@ -1910,11 +2050,12 @@ export default function AdminPage() {
                   <div
                     key={article.id}
                     style={{
-                      border: "1px solid #e0e0e0",
+                      border: article.hidden ? "1px dashed #ccc" : "1px solid #e0e0e0",
                       borderRadius: "6px",
                       padding: "16px",
-                      backgroundColor: "#fafafa",
-                      transition: "all 0.2s"
+                      backgroundColor: article.hidden ? "#f9f9f9" : "#fafafa",
+                      transition: "all 0.2s",
+                      opacity: article.hidden ? 0.7 : 1,
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -1930,20 +2071,24 @@ export default function AdminPage() {
                                 height: "80px",
                                 objectFit: "cover",
                                 borderRadius: "4px",
-                                flexShrink: 0
+                                flexShrink: 0,
+                                filter: article.hidden ? "grayscale(100%)" : "none",
                               }}
                             />
                           )}
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <h4 style={{
-                              fontSize: "16px",
-                              fontWeight: "bold",
-                              marginBottom: "8px",
-                              color: "#225BBA",
-                              lineHeight: "1.4"
-                            }}>
-                              {article.title}
-                            </h4>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                              <h4 style={{
+                                fontSize: "16px",
+                                fontWeight: "bold",
+                                color: article.hidden ? "#999" : "#225BBA",
+                                lineHeight: "1.4",
+                                textDecoration: article.hidden ? "line-through" : "none",
+                              }}>
+                                {article.hidden && "🙈 "}
+                                {article.title}
+                              </h4>
+                            </div>
                             <p style={{
                               fontSize: "13px",
                               color: "#666",
@@ -1965,21 +2110,50 @@ export default function AdminPage() {
                           gap: "12px",
                           fontSize: "12px",
                           color: "#999",
-                          flexWrap: "wrap"
+                          flexWrap: "wrap",
+                          alignItems: "center"
                         }}>
                           <span>📅 {article.publish_date}</span>
                           <span>📁 {article.category || "未分类"}</span>
                           <span>📱 {article.mp_name || "未知来源"}</span>
+                          {article.hidden && (
+                            <span style={{ 
+                              backgroundColor: "#f8d7da", 
+                              color: "#721c24", 
+                              padding: "2px 8px", 
+                              borderRadius: "4px",
+                              fontSize: "11px"
+                            }}>
+                              已隐藏
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* 操作按钮 */}
                       <div style={{
                         display: "flex",
+                        flexDirection: "column",
                         gap: "8px",
                         marginLeft: "16px",
                         flexShrink: 0
                       }}>
+                        {/* 隐藏/显示按钮 */}
+                        <button
+                          onClick={() => toggleWechatArticleHidden(article.id, article.hidden)}
+                          style={{
+                            padding: "6px 12px",
+                            backgroundColor: article.hidden ? "#d4edda" : "#f8d7da",
+                            color: article.hidden ? "#155724" : "#721c24",
+                            border: `1px solid ${article.hidden ? "#c3e6cb" : "#f5c6cb"}`,
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px"
+                          }}
+                          title={article.hidden ? "点击显示" : "点击隐藏"}
+                        >
+                          {article.hidden ? "👁️ 显示" : "🙈 隐藏"}
+                        </button>
                         <button
                           onClick={() => setEditingArticle(article)}
                           style={{
@@ -2007,7 +2181,8 @@ export default function AdminPage() {
                             borderRadius: "4px",
                             cursor: "pointer",
                             fontSize: "13px",
-                            textDecoration: "none"
+                            textDecoration: "none",
+                            textAlign: "center"
                           }}
                           title="查看原文"
                         >
@@ -2029,11 +2204,11 @@ export default function AdminPage() {
                           🗑️ 删除
                         </button>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                </div>
               </div>
-            )}
+            ))}
+          </div>
+        )}
 
             {/* 无文章提示 */}
             {!wechatLoading && wechatArticles.length === 0 && !wechatError && (
