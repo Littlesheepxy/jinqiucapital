@@ -28,8 +28,10 @@ function filterHiddenItems(content: any) {
 }
 
 // 公开的数据读取 API（无需密码）
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const type = searchParams.get('type') // 可选：只获取 'team' 或 'content'
     // 优先从数据库读取
     if (checkDbConfig()) {
       try {
@@ -49,6 +51,12 @@ export async function GET() {
             console.log('✅ 从 PostgreSQL 读取成功')
             // 过滤隐藏的栏目
             const filteredContent = filterHiddenItems(contentRecord.data || {})
+            
+            // 如果只请求 team 数据
+            if (type === 'team') {
+              return NextResponse.json(teamRecord.data || [])
+            }
+            
             return NextResponse.json({
               content: filteredContent,
               team: teamRecord.data || []
@@ -69,6 +77,11 @@ export async function GET() {
     
     // 过滤隐藏的栏目
     const filteredContent = filterHiddenItems(contentData)
+    
+    // 如果只请求 team 数据
+    if (type === 'team') {
+      return NextResponse.json(teamData)
+    }
     
     return NextResponse.json({
       content: filteredContent,
