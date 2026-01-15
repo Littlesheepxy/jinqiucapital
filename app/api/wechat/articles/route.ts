@@ -299,14 +299,13 @@ async function getArticlesFromDb(
       paramIndex++;
     }
 
-    sql += " ORDER BY publish_time DESC";
-
-    // 获取总数
+    // 获取总数（不包含 ORDER BY）
     const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
     const totalResult = await query<{ count: string }>(countSql, params);
     const totalCount = parseInt(totalResult[0]?.count || "0");
 
-    // 分页
+    // 排序和分页
+    sql += " ORDER BY publish_time DESC";
     sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
     params.push(limit, offset);
 
