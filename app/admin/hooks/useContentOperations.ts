@@ -27,7 +27,12 @@ export function useContentOperations({
 
   // ===== 团队成员操作 =====
   const addTeamMember = () => {
-    setTeamData([...teamData, { name: "", title: "", link: "" }])
+    setTeamData([...teamData, { 
+      name: { zh: "", en: "" }, 
+      title: "", 
+      title_zh: "",
+      link: "" 
+    }])
   }
 
   const removeTeamMember = (index: number) => {
@@ -36,7 +41,25 @@ export function useContentOperations({
 
   const updateTeamMember = (index: number, field: string, value: string) => {
     const updated = [...teamData]
-    updated[index] = { ...updated[index], [field]: value }
+    
+    // 处理中英文名称字段
+    if (field === "name_zh" || field === "name_en") {
+      // 确保 name 是对象格式
+      const currentName = typeof updated[index].name === 'object' 
+        ? updated[index].name 
+        : { zh: updated[index].name || "", en: "" }
+      
+      updated[index] = {
+        ...updated[index],
+        name: {
+          ...(currentName as { zh: string; en: string }),
+          [field === "name_zh" ? "zh" : "en"]: value
+        }
+      }
+    } else {
+      updated[index] = { ...updated[index], [field]: value }
+    }
+    
     setTeamData(updated)
     markAsChanged()
   }

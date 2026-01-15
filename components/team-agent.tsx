@@ -6,7 +6,7 @@ import { useLanguage } from "@/context/language-context"
 import { translations } from "@/lib/translations"
 
 interface TeamMember {
-  name: string
+  name: string | { zh: string; en: string }  // 支持旧格式和新格式
   title: string
   title_zh: string
   focus: string
@@ -31,6 +31,20 @@ export default function TeamAgent() {
       .then((data) => setTeamData(data))
       .catch((err) => console.error("Failed to load team data:", err))
   }, [])
+
+  // 获取成员名称（兼容旧数据格式）
+  const getMemberName = (member: TeamMember) => {
+    if (typeof member.name === 'object') {
+      return language === 'zh' ? member.name.zh : (member.name.en || member.name.zh)
+    }
+    return member.name
+  }
+
+  // 获取名称首字母（用于头像）
+  const getNameInitial = (member: TeamMember) => {
+    const name = getMemberName(member)
+    return name.charAt(0)
+  }
 
   // 生成渐变背景作为头像占位符
   const getGradient = (index: number) => {
@@ -66,11 +80,11 @@ export default function TeamAgent() {
                 className="w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold text-lg"
                 style={{ background: getGradient(index) }}
               >
-                {member.name.charAt(0)}
+                {getNameInitial(member)}
               </div>
 
               <h3 className="font-semibold text-sm text-center text-foreground mb-1 truncate">
-                {member.name}
+                {getMemberName(member)}
               </h3>
               
               <p className="text-xs text-center text-muted-foreground truncate">
@@ -82,7 +96,7 @@ export default function TeamAgent() {
 
         <div className="relative group">
           <a
-            href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
+            href="https://lcn954pbr3v5.jobs.feishu.cn/967548"
             target="_blank"
             rel="noopener noreferrer"
             className="block h-full"
@@ -124,11 +138,11 @@ export default function TeamAgent() {
               className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-bold text-3xl"
               style={{ background: getGradient(teamData.indexOf(selectedMember)) }}
             >
-              {selectedMember.name.charAt(0)}
+              {getNameInitial(selectedMember)}
             </div>
 
             <h3 className="text-2xl font-bold text-center text-foreground mb-2">
-              {selectedMember.name}
+              {getMemberName(selectedMember)}
             </h3>
             <p className="text-center text-muted-foreground mb-1">
               {language === "zh" ? selectedMember.title_zh : selectedMember.title}
@@ -165,7 +179,7 @@ export default function TeamAgent() {
             <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
               <div className="font-mono text-xs mb-3">
                 <span className="text-[#225BBA]">&gt;</span>{" "}
-                <span className="text-slate-500">profile.load(&quot;{selectedMember.name}&quot;)</span>
+                <span className="text-slate-500">profile.load(&quot;{getMemberName(selectedMember)}&quot;)</span>
               </div>
 
               <div className="space-y-2 font-mono text-xs text-slate-600 dark:text-slate-400">

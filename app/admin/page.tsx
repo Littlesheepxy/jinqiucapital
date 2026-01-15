@@ -47,7 +47,7 @@ function AdminContent() {
         transition: "all 0.3s"
       }}>
         {/* 左侧编辑区 */}
-        <div style={{
+        <div style={{ 
           flex: showPreview ? "0 0 55%" : "1",
           transition: "all 0.3s"
         }}>
@@ -62,11 +62,11 @@ function AdminContent() {
           {activeTab === "research" && <ResearchTab />}
           {activeTab === "wechat-articles" && <WechatArticlesTab />}
           {activeTab === "videos" && <VideosTab />}
-        </div>
+         </div>
 
         {/* 右侧预览区 */}
         <PreviewPanel />
-      </div>
+            </div>
 
       {/* 弹窗和效果 */}
       <VersionHistoryModal />

@@ -18,8 +18,9 @@ export interface VersionHistoryItem {
 
 // 团队成员
 export interface TeamMember {
-  name: string
-  title: string
+  name: string | { zh: string; en: string }  // 支持旧格式（字符串）和新格式（对象）
+  title: string       // 英文职位
+  title_zh?: string   // 中文职位
   link: string
   hidden?: boolean
 }
