@@ -7,8 +7,8 @@ import { translations } from "@/lib/translations"
 
 interface TeamMember {
   name: string | { zh: string; en: string }  // 支持旧格式和新格式
-  title: string
-  title_zh: string
+  title: string | { zh: string; en: string } // 支持旧格式和新格式
+  title_zh?: string // 旧格式兼容
   focus: string
   avatar: string | null
   links: {
@@ -26,18 +26,42 @@ export default function TeamAgent() {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
 
   useEffect(() => {
-    fetch("/data/team.json")
+    // 优先从 API 读取数据库数据
+    fetch("/api/content?type=team")
       .then((res) => res.json())
-      .then((data) => setTeamData(data))
-      .catch((err) => console.error("Failed to load team data:", err))
+      .then((data) => {
+        // API 返回 { team: [...] } 或直接返回数组
+        const teamArray = data.team || data
+        setTeamData(Array.isArray(teamArray) ? teamArray : [])
+      })
+      .catch((err) => {
+        console.error("Failed to load team data from API:", err)
+        // 降级到静态文件
+        fetch("/data/team.json")
+          .then((res) => res.json())
+          .then((data) => setTeamData(data))
+          .catch((err2) => console.error("Failed to load team data:", err2))
+      })
   }, [])
 
   // 获取成员名称（兼容旧数据格式）
   const getMemberName = (member: TeamMember) => {
-    if (typeof member.name === 'object') {
-      return language === 'zh' ? member.name.zh : (member.name.en || member.name.zh)
+    if (typeof member.name === 'object' && member.name !== null) {
+      return language === 'zh' ? (member.name.zh || member.name.en) : (member.name.en || member.name.zh)
     }
-    return member.name
+    return member.name || ''
+  }
+
+  // 获取成员职位（兼容旧数据格式）
+  const getMemberTitle = (member: TeamMember) => {
+    if (typeof member.title === 'object' && member.title !== null) {
+      return language === 'zh' ? (member.title.zh || member.title.en) : (member.title.en || member.title.zh)
+    }
+    // 旧格式兼容
+    if (language === 'zh' && member.title_zh) {
+      return member.title_zh
+    }
+    return member.title || ''
   }
 
   // 获取名称首字母（用于头像）
@@ -88,7 +112,7 @@ export default function TeamAgent() {
               </h3>
               
               <p className="text-xs text-center text-muted-foreground truncate">
-                {language === "zh" ? member.title_zh : member.title}
+                {getMemberTitle(member)}
               </p>
             </div>
           </div>
@@ -145,7 +169,7 @@ export default function TeamAgent() {
               {getMemberName(selectedMember)}
             </h3>
             <p className="text-center text-muted-foreground mb-1">
-              {language === "zh" ? selectedMember.title_zh : selectedMember.title}
+              {getMemberTitle(selectedMember)}
             </p>
             <p className="text-center text-sm text-[#225BBA] font-mono mb-4">
               {selectedMember.focus}
