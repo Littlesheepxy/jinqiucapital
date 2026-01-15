@@ -61,15 +61,23 @@ function formatArticleFromDb(row: any) {
 }
 
 // 获取分类及其别名（用于数据库查询）
+// 如果传入的是旧名称，也要查询新名称
 function getCategoryWithAliases(category: string): string[] {
   const categories = [category];
-  // 添加指向该分类的旧名称
+  
+  // 如果传入的是旧名称，添加对应的新名称
+  if (CATEGORY_ALIASES[category]) {
+    categories.push(CATEGORY_ALIASES[category]);
+  }
+  
+  // 如果传入的是新名称，添加对应的旧名称
   for (const [oldName, newName] of Object.entries(CATEGORY_ALIASES)) {
     if (newName === category) {
       categories.push(oldName);
     }
   }
-  return categories;
+  
+  return [...new Set(categories)]; // 去重
 }
 
 export async function GET(request: Request) {
