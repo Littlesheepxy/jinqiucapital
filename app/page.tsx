@@ -82,23 +82,35 @@ export default function Page() {
         Team
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "16px" }}>
-        {teamData.map((member, i) => (
-          <li key={i} style={{ marginBottom: "8px" }}>
-            {member.link ? (
-              <a
-                href={member.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-              >
-                {member.name}
-              </a>
-            ) : (
-              <strong>{member.name}</strong>
-            )}
-            {member.title && ` | ${member.title}`}
-          </li>
-        ))}
+        {teamData.map((member, i) => {
+          // 处理 name 字段（兼容对象和字符串格式）
+          const memberName = typeof member.name === 'object' && member.name !== null
+            ? (lang === 'zh' ? (member.name.zh || member.name.en) : (member.name.en || member.name.zh))
+            : member.name || ''
+          
+          // 处理 title 字段（兼容对象和字符串格式）
+          const memberTitle = typeof member.title === 'object' && member.title !== null
+            ? (lang === 'zh' ? (member.title.zh || member.title.en) : (member.title.en || member.title.zh))
+            : (lang === 'zh' && member.title_zh ? member.title_zh : member.title) || ''
+          
+          return (
+            <li key={i} style={{ marginBottom: "8px" }}>
+              {member.link ? (
+                <a
+                  href={member.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+                >
+                  {memberName}
+                </a>
+              ) : (
+                <strong>{memberName}</strong>
+              )}
+              {memberTitle && ` | ${memberTitle}`}
+            </li>
+          )
+        })}
       </ul>
       <p style={{ marginTop: "0", marginBottom: "0" }}>
         <a 
