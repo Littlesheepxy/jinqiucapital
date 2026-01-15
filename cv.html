@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>虚拟简历 | 智能硬件投资人（中英文双语）</title>
+  <style>
+    :root{
+      --text:#111;
+      --muted:#555;
+      --line:#e6e6e6;
+      --bg:#fff;
+      --chip:#f4f4f5;
+    }
+    body{ margin:0; background:var(--bg); color:var(--text); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans","PingFang SC","Hiragino Sans GB","Microsoft Yahei",sans-serif; }
+    .page{ max-width: 980px; margin: 28px auto; padding: 0 18px 40px; }
+    header{ display:flex; gap:16px; align-items:flex-start; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:14px; }
+    .name{ font-size: 26px; font-weight: 750; letter-spacing: .2px; }
+    .title{ font-size: 14px; color: var(--muted); margin-top: 6px; }
+    .meta{ text-align:right; font-size: 13px; color: var(--muted); line-height:1.5; }
+    .langbar{ margin: 14px 0 6px; display:flex; justify-content:flex-end; gap:10px; }
+    .btn{ cursor:pointer; border:1px solid var(--line); background: #fafafa; padding: 8px 10px; border-radius: 10px; font-size: 13px; color: #222; }
+    .btn.active{ background:#111; color:#fff; border-color:#111; }
+    section{ margin-top: 18px; }
+    h2{ font-size: 14px; margin: 18px 0 10px; text-transform: uppercase; letter-spacing: .12em; color:#222; }
+    .block{ border:1px solid var(--line); border-radius: 14px; padding: 14px 14px 10px; }
+    .row{ display:flex; justify-content:space-between; gap:14px; }
+    .left{ flex:1; }
+    .right{ min-width: 220px; text-align:right; color: var(--muted); font-size: 13px; }
+    .org{ font-weight: 700; font-size: 15px; }
+    .role{ font-weight: 600; color:#222; margin-top: 4px; }
+    ul{ margin: 8px 0 10px 18px; padding:0; }
+    li{ margin: 5px 0; color:#222; }
+    .muted{ color: var(--muted); }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top: 8px; }
+    .chip{ background:var(--chip); border:1px solid var(--line); padding: 6px 10px; border-radius: 999px; font-size: 12px; color:#222; }
+    .subgrid{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    .note{ font-size:12px; color: var(--muted); margin-top: 8px; }
+    .split{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+    @media (max-width: 860px){
+      header{ flex-direction:column; }
+      .meta{ text-align:left; }
+      .row{ flex-direction:column; }
+      .right{ text-align:left; }
+      .split{ grid-template-columns: 1fr; }
+    }
+    /* Language toggle */
+    [data-lang="en"]{ display:none; }
+    .show-en [data-lang="zh"]{ display:none; }
+    .show-en [data-lang="en"]{ display:block; }
+  </style>
+</head>
+<body>
+  <div class="page" id="page">
+    <header>
+      <div>
+        <div class="name">
+          <span data-lang="zh">张昊（虚拟）</span>
+          <span data-lang="en">Hao Zhang (Fictional)</span>
+        </div>
+        <div class="title">
+          <span data-lang="zh">智能硬件 / 先进制造方向投资人（约 5 年经验，USD Fund 风格）</span>
+          <span data-lang="en">Investor — Smart Hardware & Advanced Manufacturing (~5 yrs, USD-fund style)</span>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div>
+          <span data-lang="zh">Base：上海 / 深圳</span>
+          <span data-lang="en">Base: Shanghai / Shenzhen</span>
+        </div>
+        <div>
+          <span data-lang="zh">邮箱：zhanghao.invest@gmail.com</span>
+          <span data-lang="en">Email: zhanghao.invest@gmail.com</span>
+        </div>
+        <div>
+          <span data-lang="zh">语言：中文（母语）/ 英语（流利）</span>
+          <span data-lang="en">Languages: Mandarin (Native) / English (Fluent)</span>
+        </div>
+        <div>
+          <span data-lang="zh">LinkedIn：可选（留空或按需补充）</span>
+          <span data-lang="en">LinkedIn: Optional (add if needed)</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="langbar">
+      <button class="btn active" id="btnZh" type="button">中文</button>
+      <button class="btn" id="btnEn" type="button">English</button>
+    </div>
+
+    <!-- SUMMARY / HIGHLIGHTS -->
+    <section>
+      <h2>
+        <span data-lang="zh">概要</span>
+        <span data-lang="en">Summary</span>
+      </h2>
+      <div class="block">
+        <div class="split">
+          <div data-lang="zh">
+            <ul>
+              <li>专注 <b>智能硬件、消费电子、桌面级智能制造设备、IoT/边缘终端</b>，投资阶段以 <b>Seed–Series A</b> 为主。</li>
+              <li>具备工程背景，擅长 <b>产品定义、BOM/成本拆解、量产与供应链风险识别</b>。</li>
+              <li>参与过业内关注度较高的硬件项目（示例：<b>桌面级 3D 打印设备赛道头部公司</b>）的早期投资与投后支持。</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">Smart Hardware</span>
+              <span class="chip">Consumer Electronics</span>
+              <span class="chip">Advanced Manufacturing</span>
+              <span class="chip">Supply Chain</span>
+              <span class="chip">Go-to-Market (Overseas)</span>
+            </div>
+          </div>
+
+          <div data-lang="en">
+            <ul>
+              <li>Focus on <b>smart hardware, consumer electronics, desktop-level smart manufacturing devices, IoT/edge terminals</b>, primarily <b>Seed–Series A</b>.</li>
+              <li>Engineering-trained; strong in <b>product thinking, BOM/cost teardown, and supply-chain & mass-production risk assessment</b>.</li>
+              <li>Early involvement in a high-profile hardware deal (example: <b>a leading desktop 3D printer company</b>) including post-investment support.</li>
+            </ul>
+            <div class="chips">
+              <span class="chip">Smart Hardware</span>
+              <span class="chip">Consumer Tech</span>
+              <span class="chip">Advanced Mfg</span>
+              <span class="chip">BOM / Cost</span>
+              <span class="chip">Overseas GTM</span>
+            </div>
+          </div>
+        </div>
+        <div class="note">
+          <span data-lang="zh">注：本简历为虚拟示例，可将公司/学校/项目细节替换成你希望的版本。</span>
+          <span data-lang="en">Note: This is a fictional template. Replace company/school/deal details as needed.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section>
+      <h2>
+        <span data-lang="zh">教育经历</span>
+        <span data-lang="en">Education</span>
+      </h2>
+      <div class="subgrid">
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">香港科技大学（HKUST）</span>
+                <span data-lang="en">The Hong Kong University of Science and Technology (HKUST)</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">理学硕士｜电子工程 / 科技管理</span>
+                <span data-lang="en">MSc — Electronic Engineering / Technology Management</span>
+              </div>
+              <ul data-lang="zh">
+                <li>方向：智能硬件系统架构、IoT 与产品商业化</li>
+                <li>项目：智能穿戴设备课程项目（产品定义、成本结构拆解、商业化路径）</li>
+              </ul>
+              <ul data-lang="en">
+                <li>Track: smart hardware architecture, IoT, product commercialization</li>
+                <li>Project: wearable device course project (PRD, cost structure teardown, commercialization plan)</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>2017 – 2018</div>
+              <div class="muted">
+                <span data-lang="zh">海外硕士</span>
+                <span data-lang="en">Overseas Master's</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">华南理工大学</span>
+                <span data-lang="en">South China University of Technology</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">工学学士｜自动化</span>
+                <span data-lang="en">BEng — Automation</span>
+              </div>
+              <ul data-lang="zh">
+                <li>核心课程：控制原理、传感器技术、嵌入式系统、电路基础</li>
+                <li>经历：电子设计竞赛奖项；毕业设计（ARM/嵌入式智能家居控制系统）</li>
+              </ul>
+              <ul data-lang="en">
+                <li>Core: control theory, sensors, embedded systems, circuits</li>
+                <li>Experience: electronics design competitions; capstone project (ARM-based smart home controller)</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>2013 – 2017</div>
+              <div class="muted">
+                <span data-lang="zh">国内本科</span>
+                <span data-lang="en">China Bachelor's</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORK EXPERIENCE -->
+    <section>
+      <h2>
+        <span data-lang="zh">工作经历</span>
+        <span data-lang="en">Work Experience</span>
+      </h2>
+
+      <div class="subgrid">
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">某头部美元基金（科技 / 硬科技）</span>
+                <span data-lang="en">Top-tier USD Fund (Technology / Hard Tech)</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">投资经理 / Associate｜智能硬件 & 先进制造</span>
+                <span data-lang="en">Associate / Investment Manager — Smart Hardware & Advanced Manufacturing</span>
+              </div>
+
+              <ul data-lang="zh">
+                <li>投资阶段：Seed – Series A；方向覆盖消费级智能硬件、桌面级智能制造设备、IoT/边缘终端。</li>
+                <li>负责项目从 sourcing、初筛到 IC 支持；重点做技术/产品可行性、BOM/成本、供应链与量产风险判断。</li>
+                <li>与创始团队共同迭代产品路线与海外定价/渠道策略，支持下一轮融资叙事与关键指标建设。</li>
+              </ul>
+
+              <ul data-lang="en">
+                <li>Stage: Seed–Series A; coverage includes consumer smart devices, desktop smart manufacturing equipment, IoT/edge terminals.</li>
+                <li>Owned workstreams from sourcing to IC support; focused on technical/product feasibility, BOM/cost, supply chain & mass production risks.</li>
+                <li>Partnered with founders on product roadmap and overseas pricing/channel strategy; supported fundraising narrative and KPI building.</li>
+              </ul>
+
+              <div class="chips">
+                <span class="chip" data-lang="zh">Seed–A</span><span class="chip" data-lang="en">Seed–A</span>
+                <span class="chip" data-lang="zh">BOM / 成本拆解</span><span class="chip" data-lang="en">BOM / Cost Teardown</span>
+                <span class="chip" data-lang="zh">量产与供应链</span><span class="chip" data-lang="en">Supply Chain</span>
+                <span class="chip" data-lang="zh">海外市场</span><span class="chip" data-lang="en">Overseas GTM</span>
+              </div>
+            </div>
+            <div class="right">
+              <div>2019 – Present</div>
+              <div class="muted">
+                <span data-lang="zh">上海 / 深圳</span>
+                <span data-lang="en">Shanghai / Shenzhen</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">某智能硬件创业公司（早期）</span>
+                <span data-lang="en">Early-stage Smart Hardware Startup</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">产品 / 战略分析</span>
+                <span data-lang="en">Product / Strategy Analyst</span>
+              </div>
+
+              <ul data-lang="zh">
+                <li>负责竞品分析、成本结构拆解、供应链调研（ODM/模组厂），协助新产品立项。</li>
+                <li>参与智能家居设备从立项到小批量试产流程，积累量产节奏、良率与交付风险的一手认知。</li>
+              </ul>
+
+              <ul data-lang="en">
+                <li>Conducted competitor analysis, cost-structure teardown, and supplier/ODM research; supported new product initiation.</li>
+                <li>Hands-on exposure from concept to pilot run for a smart home device; learned yield, timeline, and delivery risk management.</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>2018 – 2019</div>
+              <div class="muted">
+                <span data-lang="zh">深圳</span>
+                <span data-lang="en">Shenzhen</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PROJECT / DEAL EXPERIENCE -->
+    <section>
+      <h2>
+        <span data-lang="zh">项目经历（投资 / 投后）</span>
+        <span data-lang="en">Deal Experience (Investment / Post-investment)</span>
+      </h2>
+
+      <div class="subgrid">
+
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">桌面级 3D 打印设备头部公司（示例：Bambu Lab / 拓竹）</span>
+                <span data-lang="en">Leading Desktop 3D Printer Company (Example: Bambu Lab)</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">Pre-A / A 阶段参与（投资与投后支持）</span>
+                <span data-lang="en">Pre-A / Series A involvement (Investment & Post-investment)</span>
+              </div>
+
+              <ul data-lang="zh">
+                <li>投资判断：聚焦“高速打印 + 软硬一体体验”差异化，验证核心技术路径与用户价值。</li>
+                <li>尽调工作：运动控制与系统稳定性、关键零部件供应与替代、BOM 与毛利区间、量产爬坡与售后成本。</li>
+                <li>投后支持：海外定价与渠道讨论、产品迭代节奏（硬件平台 + 软件功能）、关键岗位引入建议。</li>
+              </ul>
+
+              <ul data-lang="en">
+                <li>Thesis: differentiated via high-speed printing and integrated HW/SW user experience; validated technical path and user value.</li>
+                <li>Diligence: motion control & stability, key component supply/alternatives, BOM & gross margin range, ramp-up and warranty cost.</li>
+                <li>Post-investment: overseas pricing/channel discussions, iteration cadence (hardware platform + software), key hiring suggestions.</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>
+                <span data-lang="zh">阶段：Pre-A / A</span>
+                <span data-lang="en">Stage: Pre-A / A</span>
+              </div>
+              <div class="muted">
+                <span data-lang="zh">角色：参与 / 支持（非对外披露版）</span>
+                <span data-lang="en">Role: Contributor / Support (non-public disclosure version)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">消费级智能音频硬件品牌（匿名）</span>
+                <span data-lang="en">Consumer Smart Audio Brand (Anonymous)</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">Seed 阶段参与</span>
+                <span data-lang="en">Seed-stage involvement</span>
+              </div>
+
+              <ul data-lang="zh">
+                <li>评估产品力与渠道效率：DTC 增长、复购与口碑扩散，结合单位经济模型做规模化路径判断。</li>
+                <li>关注重点：核心器件供给、声学/结构方案迭代、售后与退货成本控制。</li>
+              </ul>
+
+              <ul data-lang="en">
+                <li>Evaluated product & channel efficiency: DTC growth, retention/word-of-mouth, and unit economics for scaling path.</li>
+                <li>Key focus: key component supply, acoustics/ID iteration, warranty and return-cost controls.</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>
+                <span data-lang="zh">阶段：Seed</span>
+                <span data-lang="en">Stage: Seed</span>
+              </div>
+              <div class="muted">
+                <span data-lang="zh">覆盖：海外市场</span>
+                <span data-lang="en">Coverage: Overseas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="row">
+            <div class="left">
+              <div class="org">
+                <span data-lang="zh">工业传感器 / 工业 IoT 公司（匿名）</span>
+                <span data-lang="en">Industrial Sensors / Industrial IoT Company (Anonymous)</span>
+              </div>
+              <div class="role">
+                <span data-lang="zh">Pre-A 阶段参与</span>
+                <span data-lang="en">Pre-A involvement</span>
+              </div>
+
+              <ul data-lang="zh">
+                <li>从“产品可靠性 + 认证体系 + 客户导入周期”评估商业化可行性与资金节奏。</li>
+                <li>重点看：客户结构、认证门槛、交付与回款周期、供应链稳定性。</li>
+              </ul>
+
+              <ul data-lang="en">
+                <li>Assessed commercialization via reliability/certification/customer onboarding cycles and cashflow cadence.</li>
+                <li>Focused on customer mix, certification barriers, delivery & collection cycle, and supply chain stability.</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div>
+                <span data-lang="zh">阶段：Pre-A</span>
+                <span data-lang="en">Stage: Pre-A</span>
+              </div>
+              <div class="muted">
+                <span data-lang="zh">To B / 工业</span>
+                <span data-lang="en">B2B / Industrial</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- OTHER -->
+    <section>
+      <h2>
+        <span data-lang="zh">其他</span>
+        <span data-lang="en">Additional</span>
+      </h2>
+      <div class="block">
+        <div class="split">
+          <div data-lang="zh">
+            <div class="org">技能</div>
+            <ul>
+              <li>尽调方法：BOM/成本拆解、供应链访谈、竞品拆机、渠道与用户验证</li>
+              <li>硬件理解：SoC/MCU 选型、传感器与模组、结构与制造工艺（入门到中级）</li>
+              <li>工具：Excel/Sheets（模型）、Notion/Docs（研究）、Figma（PRD协作）</li>
+            </ul>
+            <div class="org">兴趣</div>
+            <div class="muted">桌面制造设备、智能家居生态、产品体验研究</div>
+          </div>
+
+          <div data-lang="en">
+            <div class="org">Skills</div>
+            <ul>
+              <li>Diligence: BOM/cost teardown, supplier interviews, competitor teardown, channel & user validation</li>
+              <li>Hardware literacy: SoC/MCU selection, sensors/modules, basic-to-intermediate ID/manufacturing processes</li>
+              <li>Tools: Excel/Sheets (models), Notion/Docs (research), Figma (PRD collaboration)</li>
+            </ul>
+            <div class="org">Interests</div>
+            <div class="muted">Desktop manufacturing devices, smart home ecosystems, product experience research</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    const page = document.getElementById('page');
+    const btnZh = document.getElementById('btnZh');
+    const btnEn = document.getElementById('btnEn');
+
+    function setLang(lang){
+      if(lang === 'en'){
+        page.classList.add('show-en');
+        btnEn.classList.add('active');
+        btnZh.classList.remove('active');
+        document.documentElement.lang = 'en';
+      }else{
+        page.classList.remove('show-en');
+        btnZh.classList.add('active');
+        btnEn.classList.remove('active');
+        document.documentElement.lang = 'zh-CN';
+      }
+    }
+
+    btnZh.addEventListener('click', () => setLang('zh'));
+    btnEn.addEventListener('click', () => setLang('en'));
+    setLang('zh');
+  </script>
+</body>
+</html>
