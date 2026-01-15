@@ -1,15 +1,12 @@
 /**
- * 图片上传 API - 使用 Supabase Storage
+ * 图片上传 API - 使用本地文件系统
  * 
- * 支持上传图片到 Supabase Storage 并返回公开 URL
+ * 支持上传图片到本地 public/uploads 目录
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+import fs from 'fs';
+import path from 'path';
 
 // 验证密码
 async function verifyPassword(password: string): Promise<boolean> {
@@ -21,12 +18,18 @@ async function verifyPassword(password: string): Promise<boolean> {
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
+// 上传目录
+const UPLOAD_DIR = path.join(process.cwd(), 'public/uploads');
+
+// 确保上传目录存在
+function ensureUploadDir() {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({ error: "未配置 Supabase" }, { status: 500 });
-    }
-
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const password = formData.get("password") as string | null;
@@ -58,54 +61,33 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // 确保上传目录存在
+    ensureUploadDir();
+    const folderPath = path.join(UPLOAD_DIR, folder);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
 
     // 生成唯一文件名
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const fileName = `${folder}/${timestamp}_${randomStr}.${ext}`;
+    const fileName = `${timestamp}_${randomStr}.${ext}`;
+    const filePath = path.join(folderPath, fileName);
 
-    // 转换文件为 ArrayBuffer
+    // 转换文件为 Buffer 并保存
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(filePath, buffer);
 
-    // 上传到 Supabase Storage
-    const { data, error } = await supabase.storage
-      .from("media") // bucket 名称
-      .upload(fileName, buffer, {
-        contentType: file.type,
-        cacheControl: "31536000", // 缓存一年
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("上传失败:", error);
-      
-      // 如果是 bucket 不存在的错误，给出提示
-      if (error.message?.includes("bucket") || error.message?.includes("not found")) {
-        return NextResponse.json(
-          { 
-            error: "存储桶不存在，请先在 Supabase 控制台创建名为 'media' 的存储桶",
-            details: error.message 
-          },
-          { status: 500 }
-        );
-      }
-      
-      throw error;
-    }
-
-    // 获取公开 URL
-    const { data: urlData } = supabase.storage
-      .from("media")
-      .getPublicUrl(data.path);
+    // 生成公开 URL（相对路径）
+    const publicUrl = `/uploads/${folder}/${fileName}`;
 
     return NextResponse.json({
       success: true,
       data: {
-        url: urlData.publicUrl,
-        path: data.path,
+        url: publicUrl,
+        path: `${folder}/${fileName}`,
         size: file.size,
         type: file.type,
       },

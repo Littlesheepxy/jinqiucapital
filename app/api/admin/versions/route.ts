@@ -1,36 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase, checkSupabaseConfig } from '@/lib/supabase'
+import { query, checkConnection } from '@/lib/db'
+
+// 检查数据库配置
+function checkDbConfig(): boolean {
+  return !!(process.env.DB_HOST || process.env.DB_NAME)
+}
 
 // GET: 获取版本历史
 export async function GET(request: NextRequest) {
   try {
-    // 如果 Supabase 未配置，返回空列表
-    if (!checkSupabaseConfig()) {
+    // 如果数据库未配置，返回空列表
+    if (!checkDbConfig()) {
       return NextResponse.json({ versions: [] })
     }
+
+    const connected = await checkConnection()
+    if (!connected) {
+      return NextResponse.json({ versions: [] })
+    }
+
     const searchParams = request.nextUrl.searchParams
     const dataType = searchParams.get('type') // 'content' 或 'team'
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    let query = supabase
-      .from('version_history')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit)
+    let sql = 'SELECT * FROM version_history'
+    const params: any[] = []
+    let paramIndex = 1
 
     if (dataType && (dataType === 'content' || dataType === 'team')) {
-      query = query.eq('data_type', dataType)
+      sql += ` WHERE data_type = $${paramIndex++}`
+      params.push(dataType)
     }
 
-    const { data, error } = await query
+    sql += ' ORDER BY created_at DESC'
+    sql += ` LIMIT $${paramIndex}`
+    params.push(limit)
 
-    if (error) {
-      console.error('Failed to fetch version history:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch version history', details: error.message },
-        { status: 500 }
-      )
-    }
+    const data = await query(sql, params)
 
     return NextResponse.json({ versions: data || [] })
   } catch (error) {
@@ -45,8 +51,13 @@ export async function GET(request: NextRequest) {
 // DELETE: 删除版本历史
 export async function DELETE(request: NextRequest) {
   try {
-    // 如果 Supabase 未配置，返回成功
-    if (!checkSupabaseConfig()) {
+    // 如果数据库未配置，返回成功
+    if (!checkDbConfig()) {
+      return NextResponse.json({ success: true })
+    }
+
+    const connected = await checkConnection()
+    if (!connected) {
       return NextResponse.json({ success: true })
     }
 
@@ -60,18 +71,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const { error } = await supabase
-      .from('version_history')
-      .delete()
-      .eq('id', parseInt(versionId))
-
-    if (error) {
-      console.error('Failed to delete version:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete version', details: error.message },
-        { status: 500 }
-      )
-    }
+    await query('DELETE FROM version_history WHERE id = $1', [parseInt(versionId)])
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -82,4 +82,3 @@ export async function DELETE(request: NextRequest) {
     )
   }
 }
-

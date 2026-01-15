@@ -6,11 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+import { query, checkConnection } from "@/lib/db";
 
 // 从B站API获取视频封面图
 // 参考文档: https://github.com/socialsisteryi/bilibili-api-collect/blob/master/docs/video/info.md
@@ -48,32 +44,38 @@ async function getBilibiliCover(bvid: string): Promise<string | null> {
 
 export async function GET(request: Request) {
   try {
-    if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({ error: "未配置 Supabase" }, { status: 500 });
+    const connected = await checkConnection();
+    if (!connected) {
+      return NextResponse.json({ error: "数据库连接失败" }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
 
-    let query = supabase
-      .from("videos")
-      .select("id, title, description, bvid, category, tags, cover_image, sort_order, created_at", { count: "exact" })
-      .eq("hidden", false);
+    // 构建查询
+    let sql = "SELECT id, title, description, bvid, category, tags, cover_image, sort_order, created_at FROM videos WHERE hidden = false";
+    const params: any[] = [];
+    let paramIndex = 1;
 
     // 分类筛选
     if (category) {
-      query = query.eq("category", category);
+      sql += ` AND category = $${paramIndex++}`;
+      params.push(category);
     }
 
-    const { data, error, count } = await query
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    // 获取总数
+    const countSql = sql.replace(/SELECT .+ FROM/, "SELECT COUNT(*) as count FROM");
+    const countResult = await query<{ count: string }>(countSql, params);
+    const count = parseInt(countResult[0]?.count || "0");
 
-    if (error) throw error;
+    // 排序和分页
+    sql += " ORDER BY sort_order ASC, created_at DESC";
+    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    params.push(limit, offset);
+
+    const data = await query(sql, params);
 
     // 为没有封面图的视频获取B站封面
     const videosWithCovers = await Promise.all(
@@ -84,12 +86,12 @@ export async function GET(request: Request) {
         if (!coverImage && video.bvid) {
           coverImage = await getBilibiliCover(video.bvid);
           
-          // 可选：将获取到的封面图保存到数据库（缓存）
+          // 将获取到的封面图保存到数据库（缓存）
           if (coverImage) {
-            await supabase
-              .from("videos")
-              .update({ cover_image: coverImage })
-              .eq("id", video.id);
+            await query(
+              "UPDATE videos SET cover_image = $1 WHERE id = $2",
+              [coverImage, video.id]
+            );
           }
         }
         
@@ -112,10 +114,10 @@ export async function GET(request: Request) {
       data: {
         videos: videosWithCovers,
         pagination: {
-          total: count || 0,
+          total: count,
           limit,
           offset,
-          hasMore: offset + limit < (count || 0),
+          hasMore: offset + limit < count,
         },
       },
     });

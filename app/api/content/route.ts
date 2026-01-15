@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
-import { supabase, checkSupabaseConfig } from '@/lib/supabase'
+import { queryOne, checkConnection } from '@/lib/db'
 import fs from 'fs'
 import path from 'path'
 
 const CONTENT_FILE = path.join(process.cwd(), 'public/data/content.json')
 const TEAM_FILE = path.join(process.cwd(), 'public/data/team.json')
+
+// 检查数据库配置
+function checkDbConfig(): boolean {
+  return !!(process.env.DB_HOST || process.env.DB_NAME)
+}
 
 // 过滤隐藏的栏目（仅用于公开 API）
 function filterHiddenItems(content: any) {
@@ -25,38 +30,35 @@ function filterHiddenItems(content: any) {
 // 公开的数据读取 API（无需密码）
 export async function GET() {
   try {
-    // 优先从 Supabase 读取
-    if (checkSupabaseConfig()) {
+    // 优先从数据库读取
+    if (checkDbConfig()) {
       try {
-        console.log('📊 从 Supabase 读取公开数据...')
-        
-        const { data: contentRecord, error: contentError } = await supabase
-          .from('content')
-          .select('*')
-          .order('version', { ascending: false })
-          .limit(1)
-          .single()
+        const connected = await checkConnection()
+        if (connected) {
+          console.log('📊 从 PostgreSQL 读取公开数据...')
+          
+          const contentRecord = await queryOne<{ data: any }>(
+            'SELECT data FROM content ORDER BY version DESC LIMIT 1'
+          )
 
-        const { data: teamRecord, error: teamError } = await supabase
-          .from('team')
-          .select('*')
-          .order('version', { ascending: false })
-          .limit(1)
-          .single()
-        
-        if (!contentError && !teamError) {
-          console.log('✅ 从 Supabase 读取成功')
-          // 过滤隐藏的栏目
-          const filteredContent = filterHiddenItems(contentRecord?.data || {})
-          return NextResponse.json({
-            content: filteredContent,
-            team: teamRecord?.data || []
-          })
+          const teamRecord = await queryOne<{ data: any }>(
+            'SELECT data FROM team ORDER BY version DESC LIMIT 1'
+          )
+          
+          if (contentRecord && teamRecord) {
+            console.log('✅ 从 PostgreSQL 读取成功')
+            // 过滤隐藏的栏目
+            const filteredContent = filterHiddenItems(contentRecord.data || {})
+            return NextResponse.json({
+              content: filteredContent,
+              team: teamRecord.data || []
+            })
+          }
         }
         
-        console.warn('⚠️ Supabase 读取失败，降级到文件系统:', { contentError, teamError })
-      } catch (supabaseError) {
-        console.error('Supabase 读取异常，降级到文件系统:', supabaseError)
+        console.warn('⚠️ PostgreSQL 读取失败，降级到文件系统')
+      } catch (dbError) {
+        console.error('PostgreSQL 读取异常，降级到文件系统:', dbError)
       }
     }
     
@@ -84,4 +86,3 @@ export async function GET() {
 // 设置缓存策略：在 Edge 上缓存，但可以快速更新
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic' // 始终获取最新数据
-

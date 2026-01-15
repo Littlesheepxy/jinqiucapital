@@ -1,11 +1,11 @@
 /**
  * 微信公众号文章同步 API
  * 
- * 从 We-MP-RSS 抓取文章并保存到 Supabase 数据库
+ * 从 We-MP-RSS 抓取文章并保存到 PostgreSQL 数据库
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { query, queryOne, checkConnection } from "@/lib/db";
 import {
   getArticlesByMpName,
   type WeMpRssArticle,
@@ -20,72 +20,54 @@ const WEMPRSS_PASSWORD = process.env.WEMPRSS_PASSWORD || "";
 let cachedToken: string | null = null;
 let tokenExpiry: number = 0;
 
+// 默认获取的公众号名称
+const DEFAULT_MP_NAME = "锦秋集";
+
+// 检查数据库配置
+function checkDbConfig(): boolean {
+  return !!(process.env.DB_HOST || process.env.DB_NAME)
+}
+
 /**
- * 登录 We-MP-RSS 获取 Token
+ * 登录并获取 Token（支持传入凭据）
  */
-async function login(): Promise<string | null> {
-  if (!WEMPRSS_USERNAME || !WEMPRSS_PASSWORD) {
+async function loginWithCredentials(username: string, password: string): Promise<string | null> {
+  if (!username || !password) {
     return null;
   }
   
-  const endpoints = ["/api/v1/wx/auth/login", "/api/v1/login"];
+  // We-MP-RSS 使用表单格式登录
+  const endpoint = "/api/v1/wx/auth/login";
   
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: WEMPRSS_USERNAME,
-          password: WEMPRSS_PASSWORD,
-        }),
-      });
+  try {
+    console.log(`尝试登录 We-MP-RSS: ${WEMPRSS_URL}${endpoint}`);
+    const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
+    });
 
-      if (!response.ok) continue;
-      const data = await response.json();
-      if (data.detail || data.error) continue;
-      
-      const token = data.access_token || data.data?.access_token;
-      if (token) return token;
-    } catch {
-      continue;
+    const data = await response.json();
+    console.log("登录响应:", JSON.stringify(data).substring(0, 300));
+    
+    // 检查错误
+    if (data.detail?.code || data.detail?.message) {
+      console.log(`登录失败: ${data.detail.message}`);
+      return null;
     }
+    
+    const token = data.access_token || data.data?.access_token || data.token;
+    if (token) {
+      console.log("登录成功，获取到 Token");
+      return token;
+    }
+    
+    return null;
+  } catch (err) {
+    console.log(`登录异常: ${err}`);
+    return null;
   }
-  return null;
 }
-
-async function getValidToken(): Promise<string | null> {
-  if (cachedToken && tokenExpiry > Date.now()) {
-    return cachedToken;
-  }
-  cachedToken = await login();
-  if (cachedToken) {
-    tokenExpiry = Date.now() + (3 * 24 - 1) * 60 * 60 * 1000;
-  }
-  return cachedToken;
-}
-
-async function fetchWithAuth(endpoint: string): Promise<Response | null> {
-  const token = await getValidToken();
-  if (!token) return null;
-  
-  return fetch(`${WEMPRSS_URL}${endpoint}`, {
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-}
-
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
-
-// 默认获取的公众号名称
-const DEFAULT_MP_NAME = "锦秋集";
 
 /**
  * GET: 获取同步状态
@@ -94,50 +76,48 @@ export async function GET() {
   try {
     let dbStats = null;
     
-    if (supabase) {
-      // 获取数据库统计
-      const { count: totalCount } = await supabase
-        .from("wechat_articles")
-        .select("*", { count: "exact", head: true });
+    if (checkDbConfig()) {
+      const connected = await checkConnection();
+      if (connected) {
+        // 获取数据库统计
+        const totalResult = await query<{ count: string }>(
+          "SELECT COUNT(*) as count FROM wechat_articles"
+        );
+        const totalCount = parseInt(totalResult[0]?.count || "0");
 
-      // 获取各分类数量
-      const categoryStats: Record<string, number> = {};
-      for (const slug of Object.keys(CATEGORIES)) {
-        const { count } = await supabase
-          .from("wechat_articles")
-          .select("*", { count: "exact", head: true })
-          .eq("category", slug);
-        categoryStats[slug] = count || 0;
+        // 获取各分类数量
+        const categoryStats: Record<string, number> = {};
+        for (const slug of Object.keys(CATEGORIES)) {
+          const catResult = await query<{ count: string }>(
+            "SELECT COUNT(*) as count FROM wechat_articles WHERE category = $1",
+            [slug]
+          );
+          categoryStats[slug] = parseInt(catResult[0]?.count || "0");
+        }
+
+        // 获取最新和最早文章时间
+        const latest = await queryOne<{ publish_date: string; updated_at: string }>(
+          "SELECT publish_date, updated_at FROM wechat_articles ORDER BY publish_time DESC LIMIT 1"
+        );
+
+        const oldest = await queryOne<{ publish_date: string }>(
+          "SELECT publish_date FROM wechat_articles ORDER BY publish_time ASC LIMIT 1"
+        );
+
+        dbStats = {
+          totalArticles: totalCount,
+          categoryStats,
+          latestArticle: latest?.publish_date,
+          oldestArticle: oldest?.publish_date,
+          lastSyncTime: latest?.updated_at,
+        };
       }
-
-      // 获取最新和最早文章时间
-      const { data: latest } = await supabase
-        .from("wechat_articles")
-        .select("publish_date, updated_at")
-        .order("publish_time", { ascending: false })
-        .limit(1)
-        .single();
-
-      const { data: oldest } = await supabase
-        .from("wechat_articles")
-        .select("publish_date")
-        .order("publish_time", { ascending: true })
-        .limit(1)
-        .single();
-
-      dbStats = {
-        totalArticles: totalCount || 0,
-        categoryStats,
-        latestArticle: latest?.publish_date,
-        oldestArticle: oldest?.publish_date,
-        lastSyncTime: latest?.updated_at,
-      };
     }
 
     return NextResponse.json({
       success: true,
       data: {
-        supabaseConfigured: !!supabase,
+        databaseConfigured: checkDbConfig(),
         wemprssUrl: WEMPRSS_URL,
         targetMpName: DEFAULT_MP_NAME,
         database: dbStats,
@@ -171,11 +151,19 @@ export async function POST(request: Request) {
     const wemprssUsername = username || WEMPRSS_USERNAME;
     const wemprssPassword = password || WEMPRSS_PASSWORD;
 
-    if (!supabase) {
+    if (!checkDbConfig()) {
       return NextResponse.json({
         success: false,
-        error: "Supabase 未配置，无法保存文章",
-        suggestion: "请配置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY 环境变量",
+        error: "数据库未配置，无法保存文章",
+        suggestion: "请配置 DB_HOST, DB_NAME, DB_USER, DB_PASSWORD 环境变量",
+      }, { status: 500 });
+    }
+
+    const connected = await checkConnection();
+    if (!connected) {
+      return NextResponse.json({
+        success: false,
+        error: "数据库连接失败",
       }, { status: 500 });
     }
 
@@ -217,9 +205,7 @@ export async function POST(request: Request) {
     // 获取已存在的文章 ID（用于检查是否需要更新）
     let existingIds: Set<string> = new Set();
     if (!forceUpdate) {
-      const { data: existing } = await supabase
-        .from("wechat_articles")
-        .select("id");
+      const existing = await query<{ id: string }>("SELECT id FROM wechat_articles");
       existingIds = new Set(existing?.map(row => row.id) || []);
     }
 
@@ -251,15 +237,34 @@ export async function POST(request: Request) {
 
     // 保存到数据库
     if (newRows.length > 0) {
-      const { error } = await supabase
-        .from("wechat_articles")
-        .upsert(newRows, { 
-          onConflict: "id",
-          ignoreDuplicates: false,
-        });
-
-      if (error) {
-        throw new Error(`保存文章失败: ${error.message}`);
+      for (const row of newRows) {
+        await query(
+          `INSERT INTO wechat_articles (id, title, description, content, url, cover_image, publish_time, publish_date, mp_name, category)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           ON CONFLICT (id) DO UPDATE SET
+             title = EXCLUDED.title,
+             description = EXCLUDED.description,
+             content = EXCLUDED.content,
+             url = EXCLUDED.url,
+             cover_image = EXCLUDED.cover_image,
+             publish_time = EXCLUDED.publish_time,
+             publish_date = EXCLUDED.publish_date,
+             mp_name = EXCLUDED.mp_name,
+             category = EXCLUDED.category,
+             updated_at = CURRENT_TIMESTAMP`,
+          [
+            row.id,
+            row.title,
+            row.description,
+            row.content,
+            row.url,
+            row.cover_image,
+            row.publish_time,
+            row.publish_date,
+            row.mp_name,
+            row.category,
+          ]
+        );
       }
 
       console.log(`已保存 ${newRows.length} 篇文章到数据库`);
@@ -286,47 +291,6 @@ export async function POST(request: Request) {
       success: false,
       error: error instanceof Error ? error.message : "同步失败",
     }, { status: 500 });
-  }
-}
-
-/**
- * 登录并获取 Token（支持传入凭据）
- */
-async function loginWithCredentials(username: string, password: string): Promise<string | null> {
-  if (!username || !password) {
-    return null;
-  }
-  
-  // We-MP-RSS 使用表单格式登录
-  const endpoint = "/api/v1/wx/auth/login";
-  
-  try {
-    console.log(`尝试登录 We-MP-RSS: ${WEMPRSS_URL}${endpoint}`);
-    const response = await fetch(`${WEMPRSS_URL}${endpoint}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-    });
-
-    const data = await response.json();
-    console.log("登录响应:", JSON.stringify(data).substring(0, 300));
-    
-    // 检查错误
-    if (data.detail?.code || data.detail?.message) {
-      console.log(`登录失败: ${data.detail.message}`);
-      return null;
-    }
-    
-    const token = data.access_token || data.data?.access_token || data.token;
-    if (token) {
-      console.log("登录成功，获取到 Token");
-      return token;
-    }
-    
-    return null;
-  } catch (err) {
-    console.log(`登录异常: ${err}`);
-    return null;
   }
 }
 

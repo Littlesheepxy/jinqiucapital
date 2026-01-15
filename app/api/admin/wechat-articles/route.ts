@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { query, queryOne, checkConnection } from "@/lib/db";
 import { CATEGORY_ALIASES } from "@/lib/wechat-categories";
 
 // 获取分类及其别名（用于数据库查询）
@@ -19,10 +19,6 @@ function getCategoryWithAliases(category: string): string[] {
   return categories;
 }
 
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 // 验证密码
 async function verifyPassword(password: string): Promise<boolean> {
   const correctPassword = process.env.ADMIN_PASSWORD || "jinqiu2025";
@@ -30,44 +26,44 @@ async function verifyPassword(password: string): Promise<boolean> {
 }
 
 // 验证请求
-async function validateRequest(request: Request): Promise<boolean> {
+async function validateRequest(request: Request): Promise<{ valid: boolean; body?: any }> {
   try {
     const { searchParams } = new URL(request.url);
     const password = searchParams.get("password");
     if (password) {
-      return await verifyPassword(password);
+      return { valid: await verifyPassword(password) };
     }
 
     const body = await request.json().catch(() => ({}));
     if (body.password) {
-      return await verifyPassword(body.password);
+      return { valid: await verifyPassword(body.password), body };
     }
 
-    return false;
+    return { valid: false };
   } catch {
-    return false;
+    return { valid: false };
   }
 }
 
 export async function GET(request: Request) {
   try {
     // 验证权限
-    const isValid = await validateRequest(request);
-    if (!isValid) {
+    const { valid } = await validateRequest(request);
+    if (!valid) {
       return NextResponse.json(
         { error: "未授权访问" },
         { status: 401 }
       );
     }
 
-    if (!supabaseUrl || !supabaseKey) {
+    const connected = await checkConnection();
+    if (!connected) {
       return NextResponse.json(
-        { error: "未配置 Supabase" },
+        { error: "数据库连接失败" },
         { status: 500 }
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const search = searchParams.get("search");
@@ -77,13 +73,8 @@ export async function GET(request: Request) {
 
     // 获取单篇文章
     if (id) {
-      const { data, error } = await supabase
-        .from("wechat_articles")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const data = await queryOne("SELECT * FROM wechat_articles WHERE id = $1", [id]);
 
-      if (error) throw error;
       if (!data) {
         return NextResponse.json(
           { error: "文章不存在" },
@@ -97,40 +88,52 @@ export async function GET(request: Request) {
       });
     }
 
-    // 获取文章列表
-    let query = supabase
-      .from("wechat_articles")
-      .select("*", { count: "exact" });
+    // 构建查询
+    let sql = "SELECT * FROM wechat_articles WHERE 1=1";
+    const params: any[] = [];
+    let paramIndex = 1;
 
-    // 分类筛选（先筛选，兼容旧分类名）
+    // 分类筛选（兼容旧分类名）
     if (category) {
       const categoryList = getCategoryWithAliases(category);
       if (categoryList.length === 1) {
-        query = query.eq("category", category);
+        sql += ` AND category = $${paramIndex++}`;
+        params.push(category);
       } else {
-        query = query.in("category", categoryList);
+        const placeholders = categoryList.map((_, i) => `$${paramIndex + i}`).join(', ');
+        sql += ` AND category IN (${placeholders})`;
+        params.push(...categoryList);
+        paramIndex += categoryList.length;
       }
     }
 
-    // 搜索（在筛选结果中搜索）
+    // 搜索
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+      sql += ` AND (title ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    const { data, error, count } = await query
-      .order("publish_time", { ascending: false })
-      .range(offset, offset + limit - 1);
+    // 获取总数
+    const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
+    const countResult = await query<{ count: string }>(countSql, params);
+    const count = parseInt(countResult[0]?.count || "0");
 
-    if (error) throw error;
+    // 排序和分页
+    sql += " ORDER BY publish_time DESC";
+    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    params.push(limit, offset);
+
+    const data = await query(sql, params);
 
     return NextResponse.json({
       success: true,
       data: data || [],
-      total: count || 0,
+      total: count,
       pagination: {
         limit,
         offset,
-        hasMore: offset + limit < (count || 0),
+        hasMore: offset + limit < count,
       },
     });
   } catch (error) {
@@ -147,23 +150,23 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   try {
     // 验证权限
-    const isValid = await validateRequest(request);
-    if (!isValid) {
+    const { valid, body } = await validateRequest(request);
+    if (!valid) {
       return NextResponse.json(
         { error: "未授权访问" },
         { status: 401 }
       );
     }
 
-    if (!supabaseUrl || !supabaseKey) {
+    const connected = await checkConnection();
+    if (!connected) {
       return NextResponse.json(
-        { error: "未配置 Supabase" },
+        { error: "数据库连接失败" },
         { status: 500 }
       );
     }
 
-    const body = await request.json();
-    const { id, title, description, content, coverImage, category, hidden } = body;
+    const { id, title, description, content, coverImage, category, hidden } = body || {};
 
     if (!id) {
       return NextResponse.json(
@@ -172,33 +175,44 @@ export async function PUT(request: Request) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // 构建更新对象（只更新提供的字段）
-    const updateData: Record<string, any> = {
-      updated_at: new Date().toISOString(),
-    };
+    // 构建更新
+    const updates: string[] = ["updated_at = CURRENT_TIMESTAMP"];
+    const params: any[] = [];
+    let paramIndex = 1;
     
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (content !== undefined) updateData.content = content;
-    if (coverImage !== undefined) updateData.cover_image = coverImage;
-    if (category !== undefined) updateData.category = category;
-    if (hidden !== undefined) updateData.hidden = hidden;
+    if (title !== undefined) {
+      updates.push(`title = $${paramIndex++}`);
+      params.push(title);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      params.push(description);
+    }
+    if (content !== undefined) {
+      updates.push(`content = $${paramIndex++}`);
+      params.push(content);
+    }
+    if (coverImage !== undefined) {
+      updates.push(`cover_image = $${paramIndex++}`);
+      params.push(coverImage);
+    }
+    if (category !== undefined) {
+      updates.push(`category = $${paramIndex++}`);
+      params.push(category);
+    }
+    if (hidden !== undefined) {
+      updates.push(`hidden = $${paramIndex++}`);
+      params.push(hidden);
+    }
 
-    // 更新文章
-    const { data, error } = await supabase
-      .from("wechat_articles")
-      .update(updateData)
-      .eq("id", id)
-      .select()
-      .single();
+    params.push(id);
+    const sql = `UPDATE wechat_articles SET ${updates.join(", ")} WHERE id = $${paramIndex} RETURNING *`;
 
-    if (error) throw error;
+    const result = await query(sql, params);
 
     return NextResponse.json({
       success: true,
-      data,
+      data: result[0],
       message: "文章更新成功",
     });
   } catch (error) {
@@ -215,23 +229,23 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     // 验证权限
-    const isValid = await validateRequest(request);
-    if (!isValid) {
+    const { valid, body } = await validateRequest(request);
+    if (!valid) {
       return NextResponse.json(
         { error: "未授权访问" },
         { status: 401 }
       );
     }
 
-    if (!supabaseUrl || !supabaseKey) {
+    const connected = await checkConnection();
+    if (!connected) {
       return NextResponse.json(
-        { error: "未配置 Supabase" },
+        { error: "数据库连接失败" },
         { status: 500 }
       );
     }
 
-    const body = await request.json();
-    const { id } = body;
+    const { id } = body || {};
 
     if (!id) {
       return NextResponse.json(
@@ -240,15 +254,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // 删除文章
-    const { error } = await supabase
-      .from("wechat_articles")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
+    await query("DELETE FROM wechat_articles WHERE id = $1", [id]);
 
     return NextResponse.json({
       success: true,

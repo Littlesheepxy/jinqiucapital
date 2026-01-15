@@ -1,12 +1,12 @@
 /**
  * 定时同步微信公众号文章
  * 
- * Vercel Cron Job - 每天自动抓取最新文章并保存到 Supabase
- * 配置在 vercel.json 中
+ * Cron Job - 每天自动抓取最新文章并保存到 PostgreSQL
+ * 配置在 vercel.json 中（用于 Vercel）或使用系统 cron
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { query, checkConnection } from "@/lib/db";
 import {
   getArticlesByMpName,
   type WeMpRssArticle,
@@ -16,12 +16,10 @@ import { categorizeArticle, extractDescription, formatDate } from "@/lib/wechat-
 const CRON_SECRET = process.env.CRON_SECRET || "";
 const DEFAULT_MP_NAME = "锦秋集";
 
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+// 检查数据库配置
+function checkDbConfig(): boolean {
+  return !!(process.env.DB_HOST || process.env.DB_NAME)
+}
 
 export async function GET(request: Request) {
   const startTime = Date.now();
@@ -35,10 +33,19 @@ export async function GET(request: Request) {
 
     console.log("[Cron] 开始同步微信公众号文章到数据库...");
 
-    if (!supabase) {
+    if (!checkDbConfig()) {
       return NextResponse.json({
         success: false,
-        error: "Supabase 未配置",
+        error: "数据库未配置",
+        timestamp: new Date().toISOString(),
+      }, { status: 500 });
+    }
+
+    const connected = await checkConnection();
+    if (!connected) {
+      return NextResponse.json({
+        success: false,
+        error: "数据库连接失败",
         timestamp: new Date().toISOString(),
       }, { status: 500 });
     }
@@ -58,9 +65,7 @@ export async function GET(request: Request) {
     console.log(`[Cron] 从 We-MP-RSS 获取到 ${articles.length} 篇文章`);
 
     // 获取已存在的文章 ID
-    const { data: existing } = await supabase
-      .from("wechat_articles")
-      .select("id");
+    const existing = await query<{ id: string }>("SELECT id FROM wechat_articles");
     const existingIds = new Set(existing?.map(row => row.id) || []);
 
     // 准备要保存的文章
@@ -89,15 +94,34 @@ export async function GET(request: Request) {
 
     // 保存新文章到数据库
     if (newRows.length > 0) {
-      const { error } = await supabase
-        .from("wechat_articles")
-        .upsert(newRows, { 
-          onConflict: "id",
-          ignoreDuplicates: false,
-        });
-
-      if (error) {
-        throw new Error(`保存文章失败: ${error.message}`);
+      for (const row of newRows) {
+        await query(
+          `INSERT INTO wechat_articles (id, title, description, content, url, cover_image, publish_time, publish_date, mp_name, category)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           ON CONFLICT (id) DO UPDATE SET
+             title = EXCLUDED.title,
+             description = EXCLUDED.description,
+             content = EXCLUDED.content,
+             url = EXCLUDED.url,
+             cover_image = EXCLUDED.cover_image,
+             publish_time = EXCLUDED.publish_time,
+             publish_date = EXCLUDED.publish_date,
+             mp_name = EXCLUDED.mp_name,
+             category = EXCLUDED.category,
+             updated_at = CURRENT_TIMESTAMP`,
+          [
+            row.id,
+            row.title,
+            row.description,
+            row.content,
+            row.url,
+            row.cover_image,
+            row.publish_time,
+            row.publish_date,
+            row.mp_name,
+            row.category,
+          ]
+        );
       }
 
       console.log(`[Cron] 已保存 ${newRows.length} 篇新文章到数据库`);

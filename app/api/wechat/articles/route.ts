@@ -1,12 +1,12 @@
 /**
  * 微信公众号文章 API
  * 
- * 优先从 Supabase 数据库读取缓存的文章
+ * 优先从 PostgreSQL 数据库读取缓存的文章
  * 如果数据库为空，则从 We-MP-RSS 获取并缓存
  */
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { query, checkConnection } from "@/lib/db";
 import {
   getArticlesByMpName,
   type WeMpRssArticle,
@@ -20,15 +20,13 @@ import {
   formatDate 
 } from "@/lib/wechat-categories";
 
-// Supabase 客户端
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = supabaseUrl && supabaseKey 
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
-
 // 默认获取的公众号名称
 const DEFAULT_MP_NAME = "锦秋集";
+
+// 检查数据库配置
+function checkDbConfig(): boolean {
+  return !!(process.env.DB_HOST || process.env.DB_NAME)
+}
 
 // 格式化单篇文章（用于 We-MP-RSS 数据）
 function formatArticleFromWeMpRss(article: WeMpRssArticle, feedName?: string) {
@@ -94,8 +92,8 @@ export async function GET(request: Request) {
       });
     }
 
-    // 优先从 Supabase 读取（除非强制刷新）
-    if (supabase && !refresh) {
+    // 优先从数据库读取（除非强制刷新）
+    if (checkDbConfig() && !refresh) {
       const dbResult = await getArticlesFromDb(category, search, limit, offset, grouped);
       if (dbResult) {
         return NextResponse.json({
@@ -128,7 +126,7 @@ export async function GET(request: Request) {
     );
 
     // 异步保存到数据库（不阻塞响应）
-    if (supabase) {
+    if (checkDbConfig()) {
       saveArticlesToDb(formattedArticles).catch(err => 
         console.error("保存文章到数据库失败:", err)
       );
@@ -231,28 +229,25 @@ async function getArticlesFromDb(
   offset: number,
   grouped: boolean
 ) {
-  if (!supabase) return null;
-
   try {
-    // 先检查是否有数据（不包括隐藏的）
-    const { count } = await supabase
-      .from("wechat_articles")
-      .select("*", { count: "exact", head: true })
-      .or("hidden.is.null,hidden.eq.false");
+    const connected = await checkConnection();
+    if (!connected) return null;
 
-    if (!count || count === 0) {
+    // 先检查是否有数据
+    const countResult = await query<{ count: string }>(
+      "SELECT COUNT(*) as count FROM wechat_articles WHERE hidden IS NULL OR hidden = false"
+    );
+    
+    const count = parseInt(countResult[0]?.count || "0");
+    if (count === 0) {
       return null; // 数据库为空，需要从 We-MP-RSS 获取
     }
 
     if (grouped) {
       // 获取所有非隐藏文章并分组
-      const { data: allArticles, error } = await supabase
-        .from("wechat_articles")
-        .select("*")
-        .or("hidden.is.null,hidden.eq.false")
-        .order("publish_time", { ascending: false });
-
-      if (error) throw error;
+      const allArticles = await query(
+        "SELECT * FROM wechat_articles WHERE hidden IS NULL OR hidden = false ORDER BY publish_time DESC"
+      );
 
       const categorizedArticles: Record<string, any[]> = {};
       const uncategorized: any[] = [];
@@ -280,44 +275,53 @@ async function getArticlesFromDb(
       };
     }
 
-    // 构建查询（只查非隐藏文章）
-    let query = supabase
-      .from("wechat_articles")
-      .select("*", { count: "exact" })
-      .or("hidden.is.null,hidden.eq.false");
+    // 构建查询
+    let sql = "SELECT * FROM wechat_articles WHERE (hidden IS NULL OR hidden = false)";
+    const params: any[] = [];
+    let paramIndex = 1;
 
     if (category) {
-      // 同时查询新分类名和旧分类名（兼容历史数据）
       const categoryList = getCategoryWithAliases(category);
       if (categoryList.length === 1) {
-        query = query.eq("category", category);
+        sql += ` AND category = $${paramIndex++}`;
+        params.push(category);
       } else {
-        // 多个分类名用 in 查询
-        query = query.in("category", categoryList);
+        const placeholders = categoryList.map((_, i) => `$${paramIndex + i}`).join(', ');
+        sql += ` AND category IN (${placeholders})`;
+        params.push(...categoryList);
+        paramIndex += categoryList.length;
       }
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
+      sql += ` AND (title ILIKE $${paramIndex} OR content ILIKE $${paramIndex})`;
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    const { data, error, count: totalCount } = await query
-      .order("publish_time", { ascending: false })
-      .range(offset, offset + limit - 1);
+    sql += " ORDER BY publish_time DESC";
 
-    if (error) throw error;
+    // 获取总数
+    const countSql = sql.replace("SELECT *", "SELECT COUNT(*) as count");
+    const totalResult = await query<{ count: string }>(countSql, params);
+    const totalCount = parseInt(totalResult[0]?.count || "0");
 
+    // 分页
+    sql += ` LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    params.push(limit, offset);
+
+    const data = await query(sql, params);
     const articles = data?.map(formatArticleFromDb) || [];
 
     return {
       data: {
         articles,
-        total: totalCount || 0,
+        total: totalCount,
         category,
         pagination: {
           limit,
           offset,
-          hasMore: offset + limit < (totalCount || 0),
+          hasMore: offset + limit < totalCount,
         },
       },
     };
@@ -331,36 +335,45 @@ async function getArticlesFromDb(
  * 保存文章到数据库
  */
 async function saveArticlesToDb(articles: any[]) {
-  if (!supabase || articles.length === 0) return;
+  if (articles.length === 0) return;
 
   try {
-    const rows = articles.map(article => ({
-      id: article.id,
-      title: article.title,
-      description: article.description,
-      content: article.content,
-      url: article.url,
-      cover_image: article.coverImage,
-      publish_time: article.publishTime,
-      publish_date: article.publishDate,
-      mp_name: article.mpName,
-      category: article.category,
-    }));
+    const connected = await checkConnection();
+    if (!connected) return;
 
-    // 使用 upsert 避免重复
-    const { error } = await supabase
-      .from("wechat_articles")
-      .upsert(rows, { 
-        onConflict: "id",
-        ignoreDuplicates: false,
-      });
+    for (const article of articles) {
+      await query(
+        `INSERT INTO wechat_articles (id, title, description, content, url, cover_image, publish_time, publish_date, mp_name, category)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (id) DO UPDATE SET
+           title = EXCLUDED.title,
+           description = EXCLUDED.description,
+           content = EXCLUDED.content,
+           url = EXCLUDED.url,
+           cover_image = EXCLUDED.cover_image,
+           publish_time = EXCLUDED.publish_time,
+           publish_date = EXCLUDED.publish_date,
+           mp_name = EXCLUDED.mp_name,
+           category = EXCLUDED.category,
+           updated_at = CURRENT_TIMESTAMP`,
+        [
+          article.id,
+          article.title,
+          article.description,
+          article.content,
+          article.url,
+          article.coverImage,
+          article.publishTime,
+          article.publishDate,
+          article.mpName,
+          article.category,
+        ]
+      );
+    }
 
-    if (error) throw error;
-
-    console.log(`已保存 ${rows.length} 篇文章到数据库`);
+    console.log(`已保存 ${articles.length} 篇文章到数据库`);
   } catch (error) {
     console.error("保存文章到数据库失败:", error);
     throw error;
   }
 }
-
