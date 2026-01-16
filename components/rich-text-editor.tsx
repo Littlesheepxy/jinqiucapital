@@ -63,6 +63,7 @@ export function RichTextEditor({
   const isInternalUpdate = useRef(false)
 
   const editor = useEditor({
+    immediatelyRender: false, // 避免 SSR 水合问题
     extensions: [
       StarterKit.configure({
         heading: {
