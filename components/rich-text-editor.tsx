@@ -9,6 +9,7 @@ import { TextStyle } from "@tiptap/extension-text-style"
 import Color from "@tiptap/extension-color"
 import Underline from "@tiptap/extension-underline"
 import Placeholder from "@tiptap/extension-placeholder"
+import Highlight from "@tiptap/extension-highlight"
 import { useEffect, useRef, useCallback } from "react"
 import {
   Bold,
@@ -33,6 +34,8 @@ import {
   Quote,
   Minus,
   Palette,
+  Highlighter,
+  PaintBucket,
 } from "lucide-react"
 
 interface RichTextEditorProps {
@@ -43,13 +46,25 @@ interface RichTextEditorProps {
   onImageUpload?: (file: File) => Promise<string>
 }
 
-// 预设颜色
+// 预设文字颜色
 const COLORS = [
   "#000000", "#374151", "#6B7280", "#9CA3AF",
   "#DC2626", "#EA580C", "#D97706", "#CA8A04",
   "#16A34A", "#059669", "#0D9488", "#0891B2",
   "#2563EB", "#4F46E5", "#7C3AED", "#9333EA",
   "#DB2777", "#E11D48", "#225BBA", "#1E40AF",
+]
+
+// 预设高亮/背景颜色
+const HIGHLIGHT_COLORS = [
+  { color: "#fef3c7", name: "黄色背景" },
+  { color: "#dcfce7", name: "绿色背景" },
+  { color: "#dbeafe", name: "蓝色背景" },
+  { color: "#fce7f3", name: "粉色背景" },
+  { color: "#f3e8ff", name: "紫色背景" },
+  { color: "#fed7aa", name: "橙色背景" },
+  { color: "#e5e7eb", name: "灰色背景" },
+  { color: "transparent", name: "无背景" },
 ]
 
 export function RichTextEditor({ 
@@ -87,6 +102,9 @@ export function RichTextEditor({
       TextStyle,
       Color,
       Underline,
+      Highlight.configure({
+        multicolor: true,
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -254,11 +272,20 @@ export function RichTextEditor({
 
         <Divider />
 
-        {/* 颜色选择器 */}
+        {/* 文字颜色选择器 */}
         <div style={{ position: "relative" }}>
           <ColorPicker
             currentColor={editor.getAttributes("textStyle").color || "#000000"}
             onColorChange={setColor}
+            icon={<Palette size={16} />}
+            title="文字颜色"
+          />
+        </div>
+
+        {/* 高亮/背景色选择器 */}
+        <div style={{ position: "relative" }}>
+          <HighlightPicker
+            editor={editor}
           />
         </div>
 
@@ -535,13 +562,17 @@ function Divider() {
   )
 }
 
-// 颜色选择器
+// 文字颜色选择器
 function ColorPicker({ 
   currentColor, 
-  onColorChange 
+  onColorChange,
+  icon,
+  title = "文字颜色"
 }: { 
   currentColor: string
   onColorChange: (color: string) => void
+  icon?: React.ReactNode
+  title?: string
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -562,7 +593,7 @@ function ColorPicker({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        title="文字颜色"
+        title={title}
         style={{
           padding: "6px",
           border: "none",
@@ -574,7 +605,7 @@ function ColorPicker({
           gap: "4px",
         }}
       >
-        <Palette size={16} />
+        {icon || <Palette size={16} />}
         <div style={{
           width: "14px",
           height: "14px",
@@ -619,6 +650,114 @@ function ColorPicker({
               title={color}
             />
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 高亮/背景色选择器
+function HighlightPicker({ editor }: { editor: any }) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  
+  const currentHighlight = editor?.getAttributes("highlight")?.color || "transparent"
+
+  // 点击外部关闭
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const setHighlight = (color: string) => {
+    if (color === "transparent") {
+      editor.chain().focus().unsetHighlight().run()
+    } else {
+      editor.chain().focus().toggleHighlight({ color }).run()
+    }
+    setIsOpen(false)
+  }
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        title="背景高亮"
+        style={{
+          padding: "6px",
+          border: "none",
+          backgroundColor: isOpen ? "#e5e7eb" : "transparent",
+          borderRadius: "4px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}
+      >
+        <Highlighter size={16} />
+        <div style={{
+          width: "14px",
+          height: "14px",
+          backgroundColor: currentHighlight === "transparent" ? "#fff" : currentHighlight,
+          borderRadius: "2px",
+          border: "1px solid #d1d5db",
+        }} />
+      </button>
+      
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          marginTop: "4px",
+          padding: "8px",
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          zIndex: 100,
+          width: "160px",
+        }}>
+          <div style={{ fontSize: "12px", color: "#666", marginBottom: "8px" }}>
+            选择背景色
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
+            {HIGHLIGHT_COLORS.map((item) => (
+              <button
+                key={item.color}
+                type="button"
+                onClick={() => setHighlight(item.color)}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  backgroundColor: item.color === "transparent" ? "#fff" : item.color,
+                  border: currentHighlight === item.color ? "2px solid #2563eb" : "1px solid #d1d5db",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  position: "relative",
+                }}
+                title={item.name}
+              >
+                {item.color === "transparent" && (
+                  <span style={{ 
+                    position: "absolute", 
+                    top: "50%", 
+                    left: "50%", 
+                    transform: "translate(-50%, -50%)",
+                    fontSize: "16px",
+                    color: "#999"
+                  }}>
+                    ✕
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
