@@ -48,6 +48,8 @@ export interface ProjectItem {
   name: { zh: string; en: string }
   desc: { zh: string; en: string }
   link: string
+  slug?: string  // 内部页面路径，如 "soil"
+  pageContent?: { zh: string; en: string }  // 详情页内容（富文本）
 }
 
 export interface ProjectsData {

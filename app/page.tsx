@@ -239,19 +239,25 @@ export default function Page() {
         Projects
       </h2>
       <ul style={{ listStyle: "disc", paddingLeft: "20px", marginBottom: "40px" }}>
-        {contentData.projects.list.map((project: any, i: number) => (
-          <li key={i} style={{ marginBottom: "8px" }}>
-            <a 
-              href={project.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
-            >
-              {project.name[lang]}
-            </a>
-            {": " + project.desc[lang]}
-          </li>
-        ))}
+        {contentData.projects.list.map((project: any, i: number) => {
+          // 如果有 slug，使用内部链接；否则使用外部链接
+          const projectUrl = project.slug ? `/${project.slug}` : project.link
+          const isExternal = !project.slug && project.link
+          
+          return (
+            <li key={i} style={{ marginBottom: "8px" }}>
+              <a 
+                href={projectUrl}
+                target={isExternal ? "_blank" : undefined}
+                rel={isExternal ? "noopener noreferrer" : undefined}
+                style={{ color: "#225BBA", textDecoration: "none", fontWeight: "bold" }}
+              >
+                {project.name[lang]}
+              </a>
+              {": " + project.desc[lang]}
+            </li>
+          )
+        })}
       </ul>
 
       <hr style={{ border: "none", borderTop: "1px solid #ddd", margin: "40px 0" }} />
