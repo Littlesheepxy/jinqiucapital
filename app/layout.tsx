@@ -7,7 +7,7 @@ const noteSansSC = Noto_Sans_SC({ subsets: ["latin", "cyrillic"] })
 
 export const metadata: Metadata = {
   title: "锦秋基金 - Jinqiu Capital",
-  description: "锦秋基金是一家 AI-Native 双币早期投资机构，长期投资勇敢的科技创业者，助力其造就伟大公司。关注 AI 应用、具身智能、算力与模型基础。",
+  description: "AI-Native双币早期投资机构，我们亲身参与并活跃在AI前线，做最早理解变化、长期陪伴的投资伙伴。",
   keywords: ["锦秋基金", "Jinqiu Capital", "风险投资", "VC", "AI投资", "早期投资", "科技投资"],
   authors: [{ name: "锦秋基金", url: "https://jinqiucapital.com" }],
   creator: "锦秋基金",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     url: "https://jinqiucapital.com",
     siteName: "锦秋基金",
     title: "锦秋基金 - Jinqiu Capital",
-    description: "AI-Native 双币早期投资机构，长期投资勇敢的科技创业者，助力其造就伟大公司。",
+    description: "AI-Native双币早期投资机构，我们亲身参与并活跃在AI前线，做最早理解变化、长期陪伴的投资伙伴。",
     images: [
       {
         url: "/jinqiu-logo.png",
@@ -79,7 +79,7 @@ export default function RootLayout({
                 "@type": "ImageObject",
                 url: "https://jinqiucapital.com/jinqiu-logo.png",
               },
-              description: "锦秋基金是一家 AI-Native 双币早期投资机构，长期投资勇敢的科技创业者，助力其造就伟大公司。",
+              description: "AI-Native双币早期投资机构，我们亲身参与并活跃在AI前线，做最早理解变化、长期陪伴的投资伙伴。",
               foundingDate: "2020",
               areaServed: ["CN", "US"],
               knowsAbout: [
