@@ -166,14 +166,17 @@ export async function getArticlesByFeed(
 
 /**
  * 从 JSON Feed 获取文章（公开接口，不需要认证）
+ * 注意：We-MP-RSS 的 JSON Feed 最大支持 50 条
  */
 async function getArticlesFromJsonFeed(
   mpId: string,
-  limit = 200
+  limit = 50
 ): Promise<WeMpRssArticle[]> {
   try {
+    // JSON Feed 最大支持 50 条
+    const actualLimit = Math.min(limit, 50);
     const response = await fetch(
-      `${WEMPRSS_URL}/feed/${mpId}.json?limit=${limit}`
+      `${WEMPRSS_URL}/feed/${mpId}.json?limit=${actualLimit}`
     );
     
     if (!response.ok) {
