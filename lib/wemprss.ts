@@ -141,7 +141,7 @@ export async function getFeeds(): Promise<WeMpRssFeed[]> {
 /**
  * 获取指定公众号的文章列表
  * 
- * 优先使用 API 接口（可获取全部文章），回退到 RSS feed
+ * 优先使用 API 接口（可获取全部文章），回退到 JSON Feed
  */
 export async function getArticlesByFeed(
   mpId: string,
@@ -151,13 +151,57 @@ export async function getArticlesByFeed(
     // 尝试使用 API 接口获取所有文章（支持分页，可获取全部）
     const articles = await getArticlesFromApi(mpId, limit);
     if (articles.length > 0) {
+      console.log(`API 接口获取到 ${articles.length} 篇文章`);
       return articles;
     }
     
-    // 回退到 RSS feed
-    return await getArticlesFromRssFeed(mpId, limit);
+    // 回退到 JSON Feed（公开接口，不需要认证）
+    console.log("API 接口未返回数据，使用 JSON Feed...");
+    return await getArticlesFromJsonFeed(mpId, limit);
   } catch (error) {
     console.error("获取文章列表错误:", error);
+    return [];
+  }
+}
+
+/**
+ * 从 JSON Feed 获取文章（公开接口，不需要认证）
+ */
+async function getArticlesFromJsonFeed(
+  mpId: string,
+  limit = 200
+): Promise<WeMpRssArticle[]> {
+  try {
+    const response = await fetch(
+      `${WEMPRSS_URL}/feed/${mpId}.json?limit=${limit}`
+    );
+    
+    if (!response.ok) {
+      console.error(`JSON Feed 请求失败: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+    const items = data.items || [];
+    
+    console.log(`JSON Feed 返回 ${items.length} 篇文章`);
+    
+    // 转换为统一格式
+    return items.map((item: any) => ({
+      id: item.id || `${mpId}_${Date.now()}`,
+      title: item.title || "",
+      content: item.content || "",
+      description: item.description || "",
+      url: item.link || "",
+      pic_url: item.feed?.cover || data.cover,
+      publish_time: item.updated 
+        ? Math.floor(new Date(item.updated).getTime() / 1000)
+        : Math.floor(Date.now() / 1000),
+      mp_id: mpId,
+      mp_name: item.channel_name || data.name || "锦秋集",
+    }));
+  } catch (error) {
+    console.error("JSON Feed 获取失败:", error);
     return [];
   }
 }
@@ -230,45 +274,6 @@ async function getArticlesFromApi(
     return allArticles;
   } catch (error) {
     console.error("API 接口获取失败:", error);
-    return [];
-  }
-}
-
-/**
- * 从 RSS feed 获取文章（备用方案，有数量限制）
- */
-async function getArticlesFromRssFeed(
-  mpId: string,
-  limit = 50
-): Promise<WeMpRssArticle[]> {
-  try {
-    const response = await fetch(
-      `${WEMPRSS_URL}/feed/${mpId}.json?limit=${limit}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`获取文章列表失败: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const items: JsonFeedArticle[] = data.items || [];
-    
-    // 转换为统一格式
-    return items.map((item, index) => ({
-      id: item.id || `${mpId}_${index}`,
-      title: item.title || "",
-      content: item.content || "",
-      description: item.description || "",
-      url: item.link || "",
-      pic_url: item.feed?.cover,
-      publish_time: item.updated 
-        ? Math.floor(new Date(item.updated).getTime() / 1000)
-        : Math.floor(Date.now() / 1000),
-      mp_id: mpId,
-      mp_name: item.feed?.name || item.channel_name || data.name || "锦秋集",
-    }));
-  } catch (error) {
-    console.error("RSS Feed 获取失败:", error);
     return [];
   }
 }
