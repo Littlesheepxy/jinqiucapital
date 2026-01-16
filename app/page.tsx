@@ -114,7 +114,7 @@ export default function Page() {
       </ul>
       <p style={{ marginTop: "0", marginBottom: "0" }}>
         <a 
-          href="https://app.mokahr.com/social-recruitment/jinqiucapital/84697"
+          href="https://lcn954pbr3v5.jobs.feishu.cn/index"
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: "#225BBA", textDecoration: "none", fontSize: "14px" }}
