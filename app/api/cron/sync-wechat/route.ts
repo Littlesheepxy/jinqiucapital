@@ -64,6 +64,10 @@ export async function GET(request: Request) {
     const articles = result.articles;
     console.log(`[Cron] 从 We-MP-RSS 获取到 ${articles.length} 篇文章`);
 
+    // 检查是否强制更新所有文章（通过 URL 参数 ?force=true）
+    const url = new URL(request.url);
+    const forceUpdate = url.searchParams.get('force') === 'true';
+
     // 获取已存在的文章 ID
     const existing = await query<{ id: string }>("SELECT id FROM wechat_articles");
     const existingIds = new Set(existing?.map(row => row.id) || []);
@@ -82,19 +86,21 @@ export async function GET(request: Request) {
       category: categorizeArticle(article),
     }));
 
-    // 过滤出新文章
-    const newRows = rows.filter(row => !existingIds.has(row.id));
+    // 如果强制更新，处理所有文章；否则只处理新文章
+    const rowsToProcess = forceUpdate ? rows : rows.filter(row => !existingIds.has(row.id));
+    const newCount = rows.filter(row => !existingIds.has(row.id)).length;
+    const updateCount = forceUpdate ? rows.length - newCount : 0;
 
     // 统计分类
     const categoryStats: Record<string, number> = {};
-    newRows.forEach(row => {
+    rowsToProcess.forEach(row => {
       const cat = row.category || "uncategorized";
       categoryStats[cat] = (categoryStats[cat] || 0) + 1;
     });
 
-    // 保存新文章到数据库
-    if (newRows.length > 0) {
-      for (const row of newRows) {
+    // 保存文章到数据库（使用 UPSERT）
+    if (rowsToProcess.length > 0) {
+      for (const row of rowsToProcess) {
         await query(
           `INSERT INTO wechat_articles (id, title, description, content, url, cover_image, publish_time, publish_date, mp_name, category)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -124,9 +130,9 @@ export async function GET(request: Request) {
         );
       }
 
-      console.log(`[Cron] 已保存 ${newRows.length} 篇新文章到数据库`);
+      console.log(`[Cron] 已处理 ${rowsToProcess.length} 篇文章（新增: ${newCount}, 更新: ${updateCount}）`);
     } else {
-      console.log("[Cron] 没有新文章需要保存");
+      console.log("[Cron] 没有文章需要处理");
     }
 
     const duration = Date.now() - startTime;
@@ -142,10 +148,14 @@ export async function GET(request: Request) {
         },
         totalFetched: articles.length,
         existingArticles: existingIds.size,
-        newArticles: newRows.length,
+        newArticles: newCount,
+        updatedArticles: updateCount,
+        forceUpdate,
         categoryStats,
       },
-      message: `同步完成！获取 ${articles.length} 篇，新增 ${newRows.length} 篇`,
+      message: forceUpdate 
+        ? `同步完成！获取 ${articles.length} 篇，新增 ${newCount} 篇，更新 ${updateCount} 篇`
+        : `同步完成！获取 ${articles.length} 篇，新增 ${newCount} 篇`,
     });
   } catch (error) {
     console.error("[Cron] 同步失败:", error);
