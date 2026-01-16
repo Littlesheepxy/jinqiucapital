@@ -1,7 +1,39 @@
 "use client"
 
-import { useRef, useEffect } from "react"
-import { Link, Link2, X, Image as ImageIcon } from "lucide-react"
+import { useEditor, EditorContent } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import Link from "@tiptap/extension-link"
+import Image from "@tiptap/extension-image"
+import TextAlign from "@tiptap/extension-text-align"
+import { TextStyle } from "@tiptap/extension-text-style"
+import Color from "@tiptap/extension-color"
+import Underline from "@tiptap/extension-underline"
+import Placeholder from "@tiptap/extension-placeholder"
+import { useEffect, useRef, useCallback } from "react"
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Link as LinkIcon,
+  Unlink,
+  Image as ImageIcon,
+  Undo,
+  Redo,
+  RemoveFormatting,
+  Heading1,
+  Heading2,
+  Heading3,
+  Quote,
+  Minus,
+  Palette,
+} from "lucide-react"
 
 interface RichTextEditorProps {
   value: string
@@ -11,174 +43,316 @@ interface RichTextEditorProps {
   onImageUpload?: (file: File) => Promise<string>
 }
 
-export function RichTextEditor({ value, onChange, placeholder, minHeight = "200px", onImageUpload }: RichTextEditorProps) {
-  const editorRef = useRef<HTMLDivElement>(null)
+// 预设颜色
+const COLORS = [
+  "#000000", "#374151", "#6B7280", "#9CA3AF",
+  "#DC2626", "#EA580C", "#D97706", "#CA8A04",
+  "#16A34A", "#059669", "#0D9488", "#0891B2",
+  "#2563EB", "#4F46E5", "#7C3AED", "#9333EA",
+  "#DB2777", "#E11D48", "#225BBA", "#1E40AF",
+]
+
+export function RichTextEditor({ 
+  value, 
+  onChange, 
+  placeholder = "输入内容...", 
+  minHeight = "200px", 
+  onImageUpload 
+}: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isInternalUpdate = useRef(false)
 
-  // 初始化内容
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-blue-600 underline",
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: "max-w-full h-auto rounded-lg my-4",
+        },
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      TextStyle,
+      Color,
+      Underline,
+      Placeholder.configure({
+        placeholder,
+      }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => {
+      isInternalUpdate.current = true
+      onChange(editor.getHTML())
+    },
+    editorProps: {
+      attributes: {
+        class: "prose prose-sm max-w-none focus:outline-none",
+        style: `min-height: ${minHeight}; padding: 12px;`,
+      },
+    },
+  })
+
+  // 同步外部 value 变化
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value
+    if (editor && !isInternalUpdate.current && value !== editor.getHTML()) {
+      editor.commands.setContent(value)
     }
-  }, [value])
+    isInternalUpdate.current = false
+  }, [value, editor])
 
-  // 执行格式化命令
-  const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML)
+  // 添加链接
+  const setLink = useCallback(() => {
+    if (!editor) return
+    const previousUrl = editor.getAttributes("link").href
+    const url = window.prompt("输入链接地址:", previousUrl || "https://")
+    
+    if (url === null) return
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run()
+      return
     }
-  }
-
-  // 清理 HTML 内容
-  const cleanHtml = (html: string): string => {
-    return html
-      // 移除零宽字符
-      .replace(/[\u200B-\u200D\uFEFF]/g, '')
-      // 移除数字之间的空格（保留正常空格）
-      .replace(/(\d)\s+(\d)/g, '$1$2')
-      // 规范化空格
-      .replace(/&nbsp;/g, ' ')
-      // 移除多余的空 div/span
-      .replace(/<(div|span)>\s*<\/\1>/g, '')
-  }
-
-  // 处理内容变化
-  const handleInput = () => {
-    if (editorRef.current) {
-      const cleanedHtml = cleanHtml(editorRef.current.innerHTML)
-      onChange(cleanedHtml)
-    }
-  }
-
-  // 处理粘贴（去除格式，保留纯文本）
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault()
-    let text = e.clipboardData.getData('text/plain')
-    // 清理粘贴的文本
-    text = text.replace(/[\u200B-\u200D\uFEFF]/g, '') // 移除零宽字符
-    document.execCommand('insertText', false, text)
-  }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+  }, [editor])
 
   // 处理图片上传
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !editor) return
 
     if (onImageUpload) {
       try {
         const imageUrl = await onImageUpload(file)
         if (imageUrl) {
-          execCommand("insertImage", imageUrl)
+          editor.chain().focus().setImage({ src: imageUrl }).run()
         }
       } catch (error) {
         console.error("图片上传失败:", error)
         alert("图片上传失败，请重试")
       }
     } else {
-      // 如果没有上传函数，使用 base64
+      // 使用 base64
       const reader = new FileReader()
       reader.onload = (event) => {
         if (event.target?.result) {
-          execCommand("insertImage", event.target.result as string)
+          editor.chain().focus().setImage({ src: event.target.result as string }).run()
         }
       }
       reader.readAsDataURL(file)
     }
     
-    // 重置 input
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
   }
 
+  // 设置颜色
+  const setColor = (color: string) => {
+    if (!editor) return
+    editor.chain().focus().setColor(color).run()
+  }
+
+  if (!editor) {
+    return <div style={{ minHeight, border: "1px solid #ddd", borderRadius: "8px" }}>加载中...</div>
+  }
+
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: "4px", overflow: "hidden" }}>
+    <div style={{ border: "1px solid #ddd", borderRadius: "8px", overflow: "hidden" }}>
       {/* 工具栏 */}
       <div style={{
         display: "flex",
-        gap: "4px",
+        gap: "2px",
         padding: "8px",
-        backgroundColor: "#f8f8f8",
-        borderBottom: "1px solid #ddd",
-        flexWrap: "wrap"
+        backgroundColor: "#f9fafb",
+        borderBottom: "1px solid #e5e7eb",
+        flexWrap: "wrap",
+        alignItems: "center",
       }}>
-        <button
-          type="button"
-          onClick={() => execCommand("bold")}
-          style={toolbarButtonStyle}
-          title="加粗 (Ctrl+B)"
+        {/* 撤销/重做 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          title="撤销"
         >
-          <strong>B</strong>
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand("italic")}
-          style={toolbarButtonStyle}
-          title="斜体 (Ctrl+I)"
+          <Undo size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          title="重做"
         >
-          <em>I</em>
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand("underline")}
-          style={toolbarButtonStyle}
-          title="下划线 (Ctrl+U)"
+          <Redo size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 标题 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          active={editor.isActive("heading", { level: 1 })}
+          title="标题1"
         >
-          <u>U</u>
-        </button>
-        <div style={{ width: "1px", backgroundColor: "#ddd", margin: "0 4px" }} />
-        <button
-          type="button"
-          onClick={() => execCommand("insertUnorderedList")}
-          style={toolbarButtonStyle}
+          <Heading1 size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          active={editor.isActive("heading", { level: 2 })}
+          title="标题2"
+        >
+          <Heading2 size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          active={editor.isActive("heading", { level: 3 })}
+          title="标题3"
+        >
+          <Heading3 size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 文字格式 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          active={editor.isActive("bold")}
+          title="加粗"
+        >
+          <Bold size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          active={editor.isActive("italic")}
+          title="斜体"
+        >
+          <Italic size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          active={editor.isActive("underline")}
+          title="下划线"
+        >
+          <UnderlineIcon size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          active={editor.isActive("strike")}
+          title="删除线"
+        >
+          <Strikethrough size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 颜色选择器 */}
+        <div style={{ position: "relative" }}>
+          <ColorPicker
+            currentColor={editor.getAttributes("textStyle").color || "#000000"}
+            onColorChange={setColor}
+          />
+        </div>
+
+        <Divider />
+
+        {/* 对齐方式 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          active={editor.isActive({ textAlign: "left" })}
+          title="左对齐"
+        >
+          <AlignLeft size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          active={editor.isActive({ textAlign: "center" })}
+          title="居中"
+        >
+          <AlignCenter size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          active={editor.isActive({ textAlign: "right" })}
+          title="右对齐"
+        >
+          <AlignRight size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+          active={editor.isActive({ textAlign: "justify" })}
+          title="两端对齐"
+        >
+          <AlignJustify size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 列表 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          active={editor.isActive("bulletList")}
           title="无序列表"
         >
-          • 列表
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand("insertOrderedList")}
-          style={toolbarButtonStyle}
+          <List size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          active={editor.isActive("orderedList")}
           title="有序列表"
         >
-          1. 列表
-        </button>
-        <div style={{ width: "1px", backgroundColor: "#ddd", margin: "0 4px" }} />
-        <button
-          type="button"
-          onClick={() => execCommand("createLink", prompt("输入链接地址:", "https://") || undefined)}
-          style={toolbarButtonStyle}
+          <ListOrdered size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 引用和分割线 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          active={editor.isActive("blockquote")}
+          title="引用"
+        >
+          <Quote size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="分割线"
+        >
+          <Minus size={16} />
+        </ToolbarButton>
+
+        <Divider />
+
+        {/* 链接 */}
+        <ToolbarButton
+          onClick={setLink}
+          active={editor.isActive("link")}
           title="插入链接"
         >
-          <Link size={16} /> 链接
-        </button>
-        <button
-          type="button"
-          onClick={() => execCommand("unlink")}
-          style={toolbarButtonStyle}
+          <LinkIcon size={16} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().unsetLink().run()}
+          disabled={!editor.isActive("link")}
           title="移除链接"
         >
-          <Link2 size={16} /> 取消链接
-        </button>
-        <div style={{ width: "1px", backgroundColor: "#ddd", margin: "0 4px" }} />
-        <button
-          type="button"
-          onClick={() => execCommand("removeFormat")}
-          style={toolbarButtonStyle}
-          title="清除格式"
-        >
-          <X size={16} /> 清除格式
-        </button>
-        <div style={{ width: "1px", backgroundColor: "#ddd", margin: "0 4px" }} />
-        <button
-          type="button"
+          <Unlink size={16} />
+        </ToolbarButton>
+
+        {/* 图片 */}
+        <ToolbarButton
           onClick={() => fileInputRef.current?.click()}
-          style={toolbarButtonStyle}
           title="插入图片"
         >
-          <ImageIcon size={16} /> 插入图片
-        </button>
+          <ImageIcon size={16} />
+        </ToolbarButton>
         <input
           ref={fileInputRef}
           type="file"
@@ -186,80 +360,269 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = "200p
           onChange={handleImageUpload}
           style={{ display: "none" }}
         />
+
+        <Divider />
+
+        {/* 清除格式 */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+          title="清除格式"
+        >
+          <RemoveFormatting size={16} />
+        </ToolbarButton>
       </div>
 
       {/* 编辑区域 */}
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        onPaste={handlePaste}
-        style={{
-          minHeight,
-          padding: "12px",
-          outline: "none",
-          lineHeight: "1.6",
-          fontSize: "14px",
-          fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, -apple-system, sans-serif',
-          backgroundColor: "white"
-        }}
-        data-placeholder={placeholder}
-      />
+      <EditorContent editor={editor} />
 
-      <style jsx>{`
-        [contentEditable]:empty:before {
+      <style jsx global>{`
+        .ProseMirror {
+          min-height: ${minHeight};
+          padding: 12px;
+          outline: none;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        
+        .ProseMirror p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
-          color: #999;
+          float: left;
+          color: #9ca3af;
+          pointer-events: none;
+          height: 0;
         }
-
-        /* 确保 emoji 正常显示，不被转换成图片 */
-        [contentEditable] img.emoji {
-          display: inline;
-          height: 1em;
-          width: 1em;
-          vertical-align: middle;
-          margin: 0 0.05em;
-          border: 0;
+        
+        .ProseMirror h1 {
+          font-size: 1.875rem;
+          font-weight: 700;
+          margin: 1rem 0 0.5rem;
         }
-
-        /* 限制编辑区内的图片大小（不包括 emoji） */
-        [contentEditable] img:not(.emoji) {
+        
+        .ProseMirror h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin: 0.875rem 0 0.5rem;
+        }
+        
+        .ProseMirror h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin: 0.75rem 0 0.5rem;
+        }
+        
+        .ProseMirror p {
+          margin: 0.5rem 0;
+        }
+        
+        .ProseMirror ul,
+        .ProseMirror ol {
+          padding-left: 1.5rem;
+          margin: 0.5rem 0;
+        }
+        
+        .ProseMirror li {
+          margin: 0.25rem 0;
+        }
+        
+        .ProseMirror blockquote {
+          border-left: 3px solid #e5e7eb;
+          padding-left: 1rem;
+          margin: 0.5rem 0;
+          color: #6b7280;
+        }
+        
+        .ProseMirror hr {
+          border: none;
+          border-top: 1px solid #e5e7eb;
+          margin: 1rem 0;
+        }
+        
+        .ProseMirror a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+        
+        .ProseMirror img {
           max-width: 100%;
           height: auto;
+          border-radius: 8px;
+          margin: 0.5rem 0;
+        }
+        
+        .ProseMirror code {
+          background: #f3f4f6;
+          padding: 0.125rem 0.25rem;
           border-radius: 4px;
-          margin: 8px 0;
+          font-family: monospace;
         }
-
-        /* 防止 emoji 被自动转换 */
-        [contentEditable] {
-          -webkit-text-emphasis-style: none;
-          text-emphasis-style: none;
-          emoji-rendering: emoji;
-          font-variant-emoji: emoji;
+        
+        .ProseMirror pre {
+          background: #1f2937;
+          color: #f9fafb;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          overflow-x: auto;
         }
-
-        /* 确保文本中的 emoji 使用原生渲染 */
-        [contentEditable] {
-          font-family: inherit;
-        }
-
-        [contentEditable] * {
-          font-family: inherit;
+        
+        .ProseMirror pre code {
+          background: none;
+          padding: 0;
         }
       `}</style>
     </div>
   )
 }
 
-const toolbarButtonStyle: React.CSSProperties = {
-  padding: "6px 10px",
-  border: "1px solid #ddd",
-  backgroundColor: "white",
-  borderRadius: "3px",
-  cursor: "pointer",
-  fontSize: "14px",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px"
+// 工具栏按钮组件
+function ToolbarButton({ 
+  children, 
+  onClick, 
+  active = false, 
+  disabled = false,
+  title 
+}: { 
+  children: React.ReactNode
+  onClick: () => void
+  active?: boolean
+  disabled?: boolean
+  title?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      style={{
+        padding: "6px",
+        border: "none",
+        backgroundColor: active ? "#e5e7eb" : "transparent",
+        borderRadius: "4px",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.4 : 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: active ? "#1f2937" : "#4b5563",
+        transition: "all 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled && !active) {
+          e.currentTarget.style.backgroundColor = "#f3f4f6"
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.backgroundColor = "transparent"
+        }
+      }}
+    >
+      {children}
+    </button>
+  )
 }
 
+// 分隔符
+function Divider() {
+  return (
+    <div style={{ 
+      width: "1px", 
+      height: "20px", 
+      backgroundColor: "#e5e7eb", 
+      margin: "0 4px" 
+    }} />
+  )
+}
+
+// 颜色选择器
+function ColorPicker({ 
+  currentColor, 
+  onColorChange 
+}: { 
+  currentColor: string
+  onColorChange: (color: string) => void
+}) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // 点击外部关闭
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        title="文字颜色"
+        style={{
+          padding: "6px",
+          border: "none",
+          backgroundColor: isOpen ? "#e5e7eb" : "transparent",
+          borderRadius: "4px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px",
+        }}
+      >
+        <Palette size={16} />
+        <div style={{
+          width: "14px",
+          height: "14px",
+          backgroundColor: currentColor,
+          borderRadius: "2px",
+          border: "1px solid #d1d5db",
+        }} />
+      </button>
+      
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          marginTop: "4px",
+          padding: "8px",
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          zIndex: 100,
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "4px",
+          width: "140px",
+        }}>
+          {COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => {
+                onColorChange(color)
+                setIsOpen(false)
+              }}
+              style={{
+                width: "24px",
+                height: "24px",
+                backgroundColor: color,
+                border: currentColor === color ? "2px solid #2563eb" : "1px solid #d1d5db",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+              title={color}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 需要引入 React
+import React from "react"
