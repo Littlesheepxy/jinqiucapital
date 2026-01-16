@@ -30,17 +30,33 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = "200p
     }
   }
 
+  // 清理 HTML 内容
+  const cleanHtml = (html: string): string => {
+    return html
+      // 移除零宽字符
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // 移除数字之间的空格（保留正常空格）
+      .replace(/(\d)\s+(\d)/g, '$1$2')
+      // 规范化空格
+      .replace(/&nbsp;/g, ' ')
+      // 移除多余的空 div/span
+      .replace(/<(div|span)>\s*<\/\1>/g, '')
+  }
+
   // 处理内容变化
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML)
+      const cleanedHtml = cleanHtml(editorRef.current.innerHTML)
+      onChange(cleanedHtml)
     }
   }
 
-  // 处理粘贴（去除格式）
+  // 处理粘贴（去除格式，保留纯文本）
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault()
-    const text = e.clipboardData.getData('text/plain')
+    let text = e.clipboardData.getData('text/plain')
+    // 清理粘贴的文本
+    text = text.replace(/[\u200B-\u200D\uFEFF]/g, '') // 移除零宽字符
     document.execCommand('insertText', false, text)
   }
 
